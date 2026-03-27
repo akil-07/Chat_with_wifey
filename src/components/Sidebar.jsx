@@ -10,7 +10,7 @@ import ConversationItem from './ConversationItem'
 import UserAvatar from './UserAvatar'
 import ProfileModal from './ProfileModal'
 
-export default function Sidebar({ conversations, activeId, onSelect, isOnline }) {
+export default function Sidebar({ conversations, activeId, onSelect, onDelete, isOnline }) {
   const { user, profile } = useAuth()
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)

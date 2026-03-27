@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { db } from '../lib/firebase'
-import { collection, query, where, onSnapshot, getDocs, orderBy, doc, getDoc, setDoc, documentId } from 'firebase/firestore'
+import { collection, query, where, onSnapshot, getDocs, orderBy, doc, getDoc, setDoc, documentId, writeBatch, deleteDoc } from 'firebase/firestore'
 import { useAuth } from '../contexts/AuthContext'
 import Sidebar from '../components/Sidebar'
 import ChatWindow from '../components/ChatWindow'
@@ -118,7 +118,6 @@ export default function ChatPage() {
   async function deleteConversation(convId) {
     if (!window.confirm("Delete this conversation and all messages?")) return
     try {
-      const { deleteDoc, doc, writeBatch, collection, query, where } = await import('firebase/firestore')
       const batch = writeBatch(db)
 
       // Delete the conversation and member docs
@@ -133,7 +132,7 @@ export default function ChatPage() {
       await batch.commit()
       if (activeConversation?.id === convId) setActiveConversation(null)
     } catch (e) {
-      console.error(e)
+      console.error("Sidebar delete failed:", e)
     }
   }
 

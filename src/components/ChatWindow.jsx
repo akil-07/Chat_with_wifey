@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { db } from '../lib/firebase'
-import { collection, query, where, orderBy, onSnapshot, getDocs, doc, setDoc, updateDoc } from 'firebase/firestore'
+import { collection, query, where, orderBy, onSnapshot, getDocs, doc, setDoc, updateDoc, writeBatch, deleteDoc } from 'firebase/firestore'
 import { useAuth } from '../contexts/AuthContext'
 import { Send, Paperclip, X, FileText, Loader2, Trash2, MoreVertical } from 'lucide-react'
 import MessageBubble from './MessageBubble'
@@ -169,7 +169,6 @@ export default function ChatWindow({ conversation, isOnline }) {
   async function deleteMessage(msgId) {
     if (!window.confirm("Delete this message?")) return
     try {
-      const { deleteDoc, doc } = await import('firebase/firestore')
       await deleteDoc(doc(db, 'messages', msgId))
     } catch (e) {
       console.error(e)
@@ -179,7 +178,6 @@ export default function ChatWindow({ conversation, isOnline }) {
   async function clearHistory() {
     if (!window.confirm("Are you sure you want to delete the entire chat and contact?")) return
     try {
-      const { writeBatch, getDocs, collection, query, where, deleteDoc, doc } = await import('firebase/firestore')
       const batch = writeBatch(db)
 
       // 1. Delete all messages
@@ -190,12 +188,13 @@ export default function ChatWindow({ conversation, isOnline }) {
       // 2. Delete conversation document
       batch.delete(doc(db, 'conversations', conversation.id))
       
-      // 3. Delete member association
+      // 3. Delete member association (uses same ID)
       batch.delete(doc(db, 'conversation_members', conversation.id))
       
       await batch.commit()
+      // Side effect: ChatPage onSnapshot will trigger and clear the view
     } catch (e) {
-      console.error(e)
+      console.error("Delete failed:", e)
     }
   }
 
