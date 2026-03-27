@@ -22,8 +22,11 @@ export default function AuthPage() {
       const profileRef = doc(db, 'profiles', res.user.uid)
       const profileSnap = await getDoc(profileRef)
       if (!profileSnap.exists()) {
+        const defaultName = res.user.displayName || res.user.email.split('@')[0]
+        const formattedName = defaultName.toLowerCase().replace(/\s+/g, '') + Math.floor(Math.random() * 1000)
+        
         await setDoc(profileRef, {
-          username: res.user.displayName || res.user.email.split('@')[0],
+          username: formattedName,
           avatar_url: res.user.photoURL,
           created_at: new Date().toISOString()
         })

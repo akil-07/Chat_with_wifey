@@ -8,11 +8,13 @@ import {
 import NewChatModal from './NewChatModal'
 import ConversationItem from './ConversationItem'
 import UserAvatar from './UserAvatar'
+import ProfileModal from './ProfileModal'
 
 export default function Sidebar({ conversations, activeId, onSelect, isOnline }) {
   const { user, profile } = useAuth()
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
 
   function toggleDark() {
@@ -99,8 +101,10 @@ export default function Sidebar({ conversations, activeId, onSelect, isOnline })
           borderTop: '1px solid var(--sidebar-border)',
           display: 'flex',
           alignItems: 'center',
-          gap: '0.625rem'
-        }}>
+          gap: '0.625rem',
+          cursor: 'pointer',
+          transition: 'background 0.2s',
+        }} onClick={() => setShowProfile(true)} onMouseEnter={e => e.currentTarget.style.background = 'var(--muted)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
           <UserAvatar name={profile?.username || user?.email || '?'} size={34} online />
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--sidebar-foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -108,7 +112,7 @@ export default function Sidebar({ conversations, activeId, onSelect, isOnline })
             </p>
             <p style={{ fontSize: '0.7rem', color: 'var(--muted-foreground)' }}>Online</p>
           </div>
-          <button className="btn-ghost" onClick={() => firebaseSignOut(auth)}
+          <button className="btn-ghost" onClick={(e) => { e.stopPropagation(); firebaseSignOut(auth); }}
             style={{ padding: '0.375rem', color: 'var(--muted-foreground)' }} title="Sign out">
             <LogOut size={15} />
           </button>
@@ -120,6 +124,10 @@ export default function Sidebar({ conversations, activeId, onSelect, isOnline })
           onClose={() => setShowModal(false)}
           onCreated={(conv) => { onSelect(conv); setShowModal(false) }}
         />
+      )}
+
+      {showProfile && (
+        <ProfileModal onClose={() => setShowProfile(false)} />
       )}
     </>
   )
