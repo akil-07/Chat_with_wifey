@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { db } from '../lib/firebase'
-import { collection, query, where, onSnapshot, getDocs, orderBy, doc, getDoc, setDoc } from 'firebase/firestore'
+import { collection, query, where, onSnapshot, getDocs, orderBy, doc, getDoc, setDoc, documentId } from 'firebase/firestore'
 import { useAuth } from '../contexts/AuthContext'
 import Sidebar from '../components/Sidebar'
 import ChatWindow from '../components/ChatWindow'
@@ -57,11 +57,13 @@ export default function ChatPage() {
         ids.forEach(id => allUserIds.add(id))
       })
 
-      // Fetch all needed profiles at once
+      // Fetch all needed profiles in batches (Firestore 'in' query limit is 10)
       const profilesMap = {}
-      if (allUserIds.size > 0) {
-        const { documentId } = await import('firebase/firestore')
-        const profilesQ = query(collection(db, 'profiles'), where(documentId(), 'in', Array.from(allUserIds)))
+      const userIdArray = Array.from(allUserIds)
+      
+      for (let i = 0; i < userIdArray.length; i += 10) {
+        const batch = userIdArray.slice(i, i + 10)
+        const profilesQ = query(collection(db, 'profiles'), where(documentId(), 'in', batch))
         const profilesSnap = await getDocs(profilesQ)
         profilesSnap.forEach(d => { profilesMap[d.id] = d.data() })
       }
