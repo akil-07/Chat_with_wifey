@@ -56,6 +56,7 @@ export default function NewChatModal({ onClose, onCreated }) {
         name: isGroup ? groupName || 'Group Chat' : null,
         is_group: isGroup,
         created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(), // Same as created_at initially
         createdBy: user.uid,
         userIds: [user.uid, ...selected.map(s => s.id)] // Stored here for easy queries
       }

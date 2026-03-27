@@ -44,38 +44,34 @@ export default function ChatPage() {
   useEffect(() => {
     if (!user || !db) return
 
-    // Firestore doesn't support joins like Supabase, so we fetch membership documents
-    // where user is a member, then fetch corresponding conversation details.
-    const membershipsQ = query(collection(db, 'conversation_members'), where('userIds', 'array-contains', user.uid))
+    // Listen to user's conversations directly where user is a member
+    const conversationQ = query(collection(db, 'conversations'), where('userIds', 'array-contains', user.uid))
 
-    const unsub = onSnapshot(membershipsQ, async (snap) => {
+    const unsub = onSnapshot(conversationQ, async (snap) => {
       const convs = []
       
-      for (const membDoc of snap.docs) {
-        const conversationId = membDoc.id // we'll use conversation_id as the document id for conversation_members
-        const convSnap = await getDoc(doc(db, 'conversations', conversationId))
+      for (const convDoc of snap.docs) {
+        const cData = convDoc.data()
+        const conversationId = convDoc.id
         
-        if (convSnap.exists()) {
-          const cData = convSnap.data()
-          // Get latest message for preview (sort in memory to bypass composite index requirement)
-          const msgsQ = query(collection(db, 'messages'), where('conversation_id', '==', conversationId))
-          const msgsSnap = await getDocs(msgsQ)
-          const allMsgs = msgsSnap.docs.map(d => d.data())
-          allMsgs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-          const lastMsg = allMsgs[0]
-          
-          convs.push({
-            id: conversationId,
-            ...cData,
-            lastMessage: lastMsg || null
-          })
-        }
+        // Fetch latest preview message (still sorting manually to avoid index issues)
+        const msgsQ = query(collection(db, 'messages'), where('conversation_id', '==', conversationId))
+        const msgsSnap = await getDocs(msgsQ)
+        const allMsgs = msgsSnap.docs.map(d => d.data())
+        allMsgs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        const lastMsg = allMsgs[0]
+        
+        convs.push({
+          id: conversationId,
+          ...cData,
+          lastMessage: lastMsg || null
+        })
       }
 
-      // Sort by last message date
+      // Sort by updated_at or fallback to created_at
       convs.sort((a, b) => {
-        const aTime = a.lastMessage?.created_at || a.created_at
-        const bTime = b.lastMessage?.created_at || b.created_at
+        const aTime = a.updated_at || a.created_at
+        const bTime = b.updated_at || b.created_at
         return new Date(bTime) - new Date(aTime)
       })
 

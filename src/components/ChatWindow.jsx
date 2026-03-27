@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { db } from '../lib/firebase'
 import { collection, query, where, orderBy, onSnapshot, getDocs, doc, setDoc, updateDoc } from 'firebase/firestore'
 import { useAuth } from '../contexts/AuthContext'
-import { Send, Paperclip, X, FileText, Loader2 } from 'lucide-react'
+import { Send, Paperclip, X, FileText, Loader2, Trash2, MoreVertical } from 'lucide-react'
 import MessageBubble from './MessageBubble'
 import TypingIndicator from './TypingIndicator'
 import UserAvatar from './UserAvatar'
@@ -32,7 +32,8 @@ export default function ChatWindow({ conversation, isOnline }) {
     
     const unsubMessages = onSnapshot(msgsQ, (snap) => {
       const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-      msgs.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+      // Sort DESCENDING (Newest first) for column-reverse layout
+      msgs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       setMessages(msgs)
       setLoadingMsgs(false)
       
@@ -56,8 +57,12 @@ export default function ChatWindow({ conversation, isOnline }) {
 
     // Fetch members wrapper document (contains userIds) and then profiles
     async function fetchMembers() {
-      const membSnap = await getDocs(query(collection(db, 'profiles'), where('id', 'in', Array.isArray(conversation.userIds) && conversation.userIds.length > 0 ? conversation.userIds : ['null'])))
-      setMembers(membSnap.docs.map(d => d.data()))
+      if (!conversation.userIds || conversation.userIds.length === 0) return
+      
+      const { documentId } = await import('firebase/firestore')
+      const q = query(collection(db, 'profiles'), where(documentId(), 'in', conversation.userIds))
+      const membSnap = await getDocs(q)
+      setMembers(membSnap.docs.map(d => ({ id: d.id, ...d.data() })))
     }
     
     fetchMembers()
@@ -143,6 +148,11 @@ export default function ChatWindow({ conversation, isOnline }) {
       profiles: { username: profile?.username, avatar_url: profile?.avatar_url }
     })
 
+    // Update conversation's last updated time to move it to top of sidebar
+    await updateDoc(doc(db, 'conversations', conversation.id), {
+      updated_at: new Date().toISOString()
+    })
+
     setText('')
     setFileObj(null)
     setFilePreview(null)
@@ -154,6 +164,39 @@ export default function ChatWindow({ conversation, isOnline }) {
     })
 
     setSending(false)
+  }
+
+  async function deleteMessage(msgId) {
+    if (!window.confirm("Delete this message?")) return
+    try {
+      const { deleteDoc, doc } = await import('firebase/firestore')
+      await deleteDoc(doc(db, 'messages', msgId))
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  async function clearHistory() {
+    if (!window.confirm("Are you sure you want to delete the entire chat history?")) return
+    try {
+      const { writeBatch, getDocs, collection, query, where } = await import('firebase/firestore')
+      const q = query(collection(db, 'messages'), where('conversation_id', '==', conversation.id))
+      const snap = await getDocs(q)
+      
+      const batch = writeBatch(db)
+      snap.docs.forEach(d => batch.delete(d.ref))
+      await batch.commit()
+      
+      // Also potentially delete the conversation document? 
+      // The user said "delete chats and and the whole chat".
+      // Let's just clear messages for now, or if they want to delete the conversation:
+      /*
+      await deleteDoc(doc(db, 'conversations', conversation.id))
+      await deleteDoc(doc(db, 'conversation_members', conversation.id))
+      */
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   const otherMember = members.find(m => m.username !== profile?.username)
@@ -177,7 +220,7 @@ export default function ChatWindow({ conversation, isOnline }) {
           size={38}
           online={!conversation.is_group && otherMember ? isOnline(otherMember.id) : false}
         />
-        <div>
+        <div style={{ flex: 1 }}>
           <h2 style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--foreground)' }}>{headerName}</h2>
           <p style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)' }}>
             {conversation.is_group
@@ -186,21 +229,36 @@ export default function ChatWindow({ conversation, isOnline }) {
             }
           </p>
         </div>
+        
+        <button className="btn-ghost" onClick={clearHistory} 
+          style={{ padding: '0.5rem', color: 'var(--muted-foreground)' }} 
+          title="Delete chat history">
+          <Trash2 size={18} />
+        </button>
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+      <div style={{ 
+        flex: 1, 
+        overflowY: 'auto', 
+        padding: '1.25rem', 
+        display: 'flex', 
+        flexDirection: 'column-reverse', // Newest messages at bottom, scroll stays at bottom
+        gap: '0.5rem' 
+      }}>
+        {/* Placeholder to push content to bottom if few messages */}
+        <div ref={bottomRef} style={{ height: 1 }} />
+        {typingUsers.length > 0 && <TypingIndicator users={typingUsers} />}
         {messages.map((msg, i) => (
           <MessageBubble
             key={msg.id}
             message={msg}
             isMine={msg.sender_id === user?.uid}
-            showAvatar={!conversation.is_group || msg.sender_id !== messages[i + 1]?.sender_id}
+            showAvatar={!conversation.is_group || msg.sender_id !== messages[i - 1]?.sender_id}
             isGroup={conversation.is_group}
+            onDelete={() => deleteMessage(msg.id)}
           />
         ))}
-        {typingUsers.length > 0 && <TypingIndicator users={typingUsers} />}
-        <div ref={bottomRef} />
       </div>
 
       {/* File preview */}
