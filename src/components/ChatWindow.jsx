@@ -177,23 +177,23 @@ export default function ChatWindow({ conversation, isOnline }) {
   }
 
   async function clearHistory() {
-    if (!window.confirm("Are you sure you want to delete the entire chat history?")) return
+    if (!window.confirm("Are you sure you want to delete the entire chat and contact?")) return
     try {
-      const { writeBatch, getDocs, collection, query, where } = await import('firebase/firestore')
-      const q = query(collection(db, 'messages'), where('conversation_id', '==', conversation.id))
-      const snap = await getDocs(q)
-      
+      const { writeBatch, getDocs, collection, query, where, deleteDoc, doc } = await import('firebase/firestore')
       const batch = writeBatch(db)
-      snap.docs.forEach(d => batch.delete(d.ref))
-      await batch.commit()
+
+      // 1. Delete all messages
+      const msgsQ = query(collection(db, 'messages'), where('conversation_id', '==', conversation.id))
+      const msgsSnap = await getDocs(msgsQ)
+      msgsSnap.docs.forEach(d => batch.delete(d.ref))
       
-      // Also potentially delete the conversation document? 
-      // The user said "delete chats and and the whole chat".
-      // Let's just clear messages for now, or if they want to delete the conversation:
-      /*
-      await deleteDoc(doc(db, 'conversations', conversation.id))
-      await deleteDoc(doc(db, 'conversation_members', conversation.id))
-      */
+      // 2. Delete conversation document
+      batch.delete(doc(db, 'conversations', conversation.id))
+      
+      // 3. Delete member association
+      batch.delete(doc(db, 'conversation_members', conversation.id))
+      
+      await batch.commit()
     } catch (e) {
       console.error(e)
     }

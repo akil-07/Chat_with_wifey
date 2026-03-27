@@ -101,7 +101,11 @@ export default function ChatPage() {
       // Update active conversation reference if it changed
       if (activeConversation) {
         const updatedActive = convs.find(c => c.id === activeConversation.id)
-        if (updatedActive) setActiveConversation(updatedActive)
+        if (updatedActive) {
+          setActiveConversation(updatedActive)
+        } else {
+          setActiveConversation(null) // It was deleted
+        }
       }
     })
 
