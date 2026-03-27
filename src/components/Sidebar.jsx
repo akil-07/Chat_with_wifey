@@ -88,6 +88,7 @@ export default function Sidebar({ conversations, activeId, onSelect, isOnline })
                 conversation={conv}
                 active={conv.id === activeId}
                 onClick={() => onSelect(conv)}
+                onDelete={() => onDelete(conv.id)}
                 currentUserId={user?.uid}
                 isOnline={isOnline}
               />

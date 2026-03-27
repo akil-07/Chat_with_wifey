@@ -1,6 +1,8 @@
-import { useEffect } from 'react'
+import { useState } from 'react'
+import { Trash2 } from 'lucide-react'
 
-export default function ConversationItem({ conversation, active, onClick, currentUserId, isOnline }) {
+export default function ConversationItem({ conversation, active, onClick, onDelete, currentUserId, isOnline }) {
+  const [hover, setHover] = useState(false)
   const lastMsg = conversation.lastMessage
 
   const preview = lastMsg
@@ -9,11 +11,15 @@ export default function ConversationItem({ conversation, active, onClick, curren
 
   const displayName = conversation.is_group
     ? conversation.name || 'Group Chat'
-    : conversation.name || 'Direct Message'
+    : conversation.otherMember?.username || conversation.name || 'Direct Message'
+
+  const otherMemberId = conversation.userIds?.find(id => id !== currentUserId)
 
   return (
     <div
       onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       style={{
         display: 'flex', alignItems: 'center', gap: '0.625rem',
         padding: '0.625rem 1rem',
@@ -21,14 +27,13 @@ export default function ConversationItem({ conversation, active, onClick, curren
         background: active ? 'color-mix(in srgb, var(--sidebar-primary) 12%, transparent)' : 'transparent',
         borderRight: active ? '3px solid var(--sidebar-primary)' : '3px solid transparent',
         transition: 'background 0.15s',
+        position: 'relative'
       }}
-      onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--muted)' }}
-      onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
     >
       <UserAvatar
         name={displayName}
         size={40}
-        online={!conversation.is_group && isOnline?.(currentUserId)}
+        online={!conversation.is_group && otherMemberId ? isOnline?.(otherMemberId) : false}
       />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.15rem' }}>
@@ -39,10 +44,20 @@ export default function ConversationItem({ conversation, active, onClick, curren
           }}>
             {displayName}
           </span>
-          {lastMsg && (
+          {!hover && lastMsg && (
             <span style={{ fontSize: '0.65rem', color: 'var(--muted-foreground)', flexShrink: 0, marginLeft: '0.375rem' }}>
               {formatTime(lastMsg.created_at)}
             </span>
+          )}
+          {hover && (
+            <button 
+              className="btn-ghost" 
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              style={{ padding: '0.2rem', color: 'var(--destructive)', opacity: 0.7 }}
+              title="Delete conversation"
+            >
+              <Trash2 size={14} />
+            </button>
           )}
         </div>
         <p style={{
