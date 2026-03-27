@@ -57,11 +57,12 @@ export default function ChatPage() {
         
         if (convSnap.exists()) {
           const cData = convSnap.data()
-          
-          // Get latest message for preview
-          const msgsQ = query(collection(db, 'messages'), where('conversation_id', '==', conversationId), orderBy('created_at', 'desc'))
+          // Get latest message for preview (sort in memory to bypass composite index requirement)
+          const msgsQ = query(collection(db, 'messages'), where('conversation_id', '==', conversationId))
           const msgsSnap = await getDocs(msgsQ)
-          const lastMsg = msgsSnap.docs[0]?.data()
+          const allMsgs = msgsSnap.docs.map(d => d.data())
+          allMsgs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          const lastMsg = allMsgs[0]
           
           convs.push({
             id: conversationId,

@@ -16,24 +16,29 @@ export default function ChatWindow({ conversation, isOnline }) {
   const [typingUsers, setTypingUsers] = useState([])
   const [filePreview, setFilePreview] = useState(null)
   const [fileObj, setFileObj] = useState(null)
+  const [loadingMsgs, setLoadingMsgs] = useState(true)
   
   const bottomRef = useRef(null)
   const fileInputRef = useRef(null)
   const typingTimeoutRef = useRef(null)
 
   useEffect(() => {
-    if (!user || !db) return
+    if (!conversation?.id || !db) return
+    setLoadingMsgs(true)
 
     // Setup messages listener
-    const q = query(
-      collection(db, 'messages'), 
-      where('conversation_id', '==', conversation.id), 
-      orderBy('created_at', 'asc')
-    )
-
-    const unsubMessages = onSnapshot(q, (snap) => {
+    // Bypass composite index requirement by not using orderBy natively
+    const msgsQ = query(collection(db, 'messages'), where('conversation_id', '==', conversation.id))
+    
+    const unsubMessages = onSnapshot(msgsQ, (snap) => {
       const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      msgs.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
       setMessages(msgs)
+      setLoadingMsgs(false)
+      
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 50)
     })
 
     // Listen to typing state
