@@ -3,7 +3,11 @@ import { Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
 export default function MessageBubble({ message, isMine, showAvatar, isGroup, onDelete }) {
-  const isImage = message.file_url && /\.(jpe?g|png|gif|webp|svg)(\?|$)/i.test(message.file_url)
+  // Detect both URL-based images and base64 data URLs (what Firestore stores)
+  const isImage = message.file_url && (
+    /^data:image\//i.test(message.file_url) ||
+    /\.(jpe?g|png|gif|webp|svg)(\?|$)/i.test(message.file_url)
+  )
   const isFile = message.file_url && !isImage
   const [hover, setHover] = useState(false)
 
