@@ -10,7 +10,7 @@ import ConversationItem from './ConversationItem'
 import UserAvatar from './UserAvatar'
 import ProfileModal from './ProfileModal'
 
-export default function Sidebar({ conversations, activeId, onSelect, onDelete, isOnline }) {
+export default function Sidebar({ conversations, activeId, onSelect, onDelete, isOnline, isMobile }) {
   const { user, profile } = useAuth()
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
@@ -22,9 +22,13 @@ export default function Sidebar({ conversations, activeId, onSelect, onDelete, i
     setDark(d => !d)
   }
 
-  const filtered = conversations.filter(c =>
-    (c.name || '').toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = conversations.filter(c => {
+    const term = search.toLowerCase()
+    const name = c.is_group
+      ? (c.name || '').toLowerCase()
+      : (c.otherMember?.username || c.name || '').toLowerCase()
+    return name.includes(term)
+  })
 
   return (
     <>
