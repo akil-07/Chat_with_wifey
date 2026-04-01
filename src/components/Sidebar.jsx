@@ -29,11 +29,11 @@ export default function Sidebar({ conversations, activeId, onSelect, onDelete, i
   return (
     <>
       <aside style={{
-        width: '300px',
-        minWidth: '300px',
+        width: isMobile ? '100%' : '300px',
+        minWidth: isMobile ? '100%' : '300px',
         height: '100vh',
         background: 'var(--sidebar)',
-        borderRight: '1px solid var(--sidebar-border)',
+        borderRight: isMobile ? 'none' : '1px solid var(--sidebar-border)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',

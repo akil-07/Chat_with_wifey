@@ -2,12 +2,12 @@ import { useState, useEffect, useRef } from 'react'
 import { db } from '../lib/firebase'
 import { collection, query, where, orderBy, onSnapshot, getDocs, doc, setDoc, updateDoc, writeBatch, deleteDoc } from 'firebase/firestore'
 import { useAuth } from '../contexts/AuthContext'
-import { Send, Paperclip, X, FileText, Loader2, Trash2, MoreVertical } from 'lucide-react'
+import { Send, Paperclip, X, FileText, Loader2, Trash2, MoreVertical, ArrowLeft } from 'lucide-react'
 import MessageBubble from './MessageBubble'
 import TypingIndicator from './TypingIndicator'
 import UserAvatar from './UserAvatar'
 
-export default function ChatWindow({ conversation, isOnline }) {
+export default function ChatWindow({ conversation, isOnline, isMobile, onBack }) {
   const { user, profile } = useAuth()
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
@@ -207,20 +207,28 @@ export default function ChatWindow({ conversation, isOnline }) {
     <main style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
       {/* Header */}
       <div style={{
-        padding: '0.875rem 1.25rem',
+        padding: isMobile ? '0.75rem 1rem' : '0.875rem 1.25rem',
         borderBottom: '1px solid var(--border)',
         background: 'var(--card)',
         display: 'flex',
         alignItems: 'center',
-        gap: '0.75rem',
+        gap: '0.625rem',
       }}>
+        {/* Back button on mobile */}
+        {isMobile && (
+          <button className="btn-ghost" onClick={onBack}
+            style={{ padding: '0.375rem', color: 'var(--foreground)', flexShrink: 0 }}
+            title="Back">
+            <ArrowLeft size={20} />
+          </button>
+        )}
         <UserAvatar
           name={headerName}
-          size={38}
+          size={isMobile ? 34 : 38}
           online={!conversation.is_group && otherMember ? isOnline(otherMember.id) : false}
         />
-        <div style={{ flex: 1 }}>
-          <h2 style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--foreground)' }}>{headerName}</h2>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h2 style={{ fontWeight: 600, fontSize: isMobile ? '0.9rem' : '0.95rem', color: 'var(--foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{headerName}</h2>
           <p style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)' }}>
             {conversation.is_group
               ? `${members.length} members`
@@ -230,8 +238,8 @@ export default function ChatWindow({ conversation, isOnline }) {
         </div>
         
         <button className="btn-ghost" onClick={clearHistory} 
-          style={{ padding: '0.5rem', color: 'var(--muted-foreground)' }} 
-          title="Delete chat history">
+          style={{ padding: '0.5rem', color: 'var(--muted-foreground)', flexShrink: 0 }} 
+          title="Delete chat">
           <Trash2 size={18} />
         </button>
       </div>

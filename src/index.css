@@ -174,3 +174,25 @@ html, body, #root {
 }
 .animate-fade-in   { animation: fadeIn 0.25s ease both; }
 .animate-slide-in  { animation: slideInLeft 0.2s ease both; }
+
+/* Mobile fixes */
+@media (max-width: 767px) {
+  /* Prevent iOS zoom on input focus (needs font-size >= 16px) */
+  .input, .auth-input, input, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Bigger touch targets for buttons */
+  .btn-ghost {
+    min-width: 36px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Safe area for phones with notches */
+  main, aside {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}

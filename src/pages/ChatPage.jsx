@@ -10,10 +10,14 @@ export default function ChatPage() {
   const { user } = useAuth()
   const [conversations, setConversations] = useState([])
   const [activeConversation, setActiveConversation] = useState(null)
-  
-  // Realtime profiles listener (online status is simulated via timestamp in a real app,
-  // but for simplicity we will just manage a basic user list)
   const [usersPresence, setUsersPresence] = useState({})
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Update presence status on mount
   useEffect(() => {
@@ -140,23 +144,34 @@ export default function ChatPage() {
     return usersPresence[userId]?.online === true
   }
 
+  // On mobile: show sidebar OR chat, not both
+  const showSidebar = !isMobile || !activeConversation
+  const showChat = !isMobile || !!activeConversation
+
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--background)' }}>
-      <Sidebar
-        conversations={conversations}
-        activeId={activeConversation?.id}
-        onSelect={setActiveConversation}
-        onDelete={deleteConversation}
-        isOnline={isOnline}
-      />
-      {activeConversation
-        ? <ChatWindow
-            key={activeConversation.id}
-            conversation={activeConversation}
-            isOnline={isOnline}
-          />
-        : <WelcomeScreen />
-      }
+      {showSidebar && (
+        <Sidebar
+          conversations={conversations}
+          activeId={activeConversation?.id}
+          onSelect={setActiveConversation}
+          onDelete={deleteConversation}
+          isOnline={isOnline}
+          isMobile={isMobile}
+          style={isMobile ? { width: '100%', minWidth: '100%' } : {}}
+        />
+      )}
+      {showChat && (
+        activeConversation
+          ? <ChatWindow
+              key={activeConversation.id}
+              conversation={activeConversation}
+              isOnline={isOnline}
+              isMobile={isMobile}
+              onBack={() => setActiveConversation(null)}
+            />
+          : (!isMobile && <WelcomeScreen />)
+      )}
     </div>
   )
 }
