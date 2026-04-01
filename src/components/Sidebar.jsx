@@ -43,10 +43,14 @@ export default function Sidebar({ conversations, activeId, onSelect, onDelete, i
         <div style={{ padding: '1rem 1rem 0.75rem', borderBottom: '1px solid var(--sidebar-border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.875rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ background: 'var(--sidebar-primary)', borderRadius: '8px', padding: '0.375rem', display: 'flex' }}>
-                <MessageCircle size={18} color="var(--sidebar-primary-foreground)" />
+              <div style={{
+                background: 'linear-gradient(135deg, var(--sidebar-primary), var(--sidebar-accent))',
+                borderRadius: '10px', padding: '0.4rem', display: 'flex',
+                boxShadow: '0 2px 12px color-mix(in srgb, var(--sidebar-primary) 35%, transparent)'
+              }}>
+                <MessageCircle size={18} color="#fff" />
               </div>
-              <span style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--sidebar-foreground)' }}>Chattr</span>
+              <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--sidebar-foreground)', letterSpacing: '-0.3px' }}>Chattr</span>
             </div>
             <div style={{ display: 'flex', gap: '0.25rem' }}>
               <button className="btn-ghost" onClick={toggleDark}

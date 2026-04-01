@@ -1,14 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
 @import "tailwindcss";
 
 :root {
   --card: #ffffff;
   --ring: #8839ef;
-  --input: #ccd0da;
-  --muted: #dce0e8;
+  --input: #f4f0fb;
+  --muted: #ede8f8;
   --accent: #04a5e5;
-  --border: #bcc0cc;
-  --radius: 0.35rem;
+  --border: #e0d8f5;
+  --radius: 0.5rem;
   --chart-1: #8839ef;
   --chart-2: #04a5e5;
   --chart-3: #40a02b;
@@ -16,24 +16,24 @@
   --chart-5: #dc8a78;
   --popover: #ccd0da;
   --primary: #8839ef;
-  --sidebar: #e6e9ef;
+  --sidebar: #f5f2fc;
   --font-mono: 'Fira Code', monospace;
-  --font-sans: 'Montserrat', sans-serif;
+  --font-sans: 'Inter', sans-serif;
   --secondary: #ccd0da;
-  --background: #eff1f5;
+  --background: #eeeaf8;
   --font-serif: Georgia, serif;
   --foreground: #4c4f69;
   --destructive: #d20f39;
-  --shadow-blur: 6px;
-  --shadow-color: hsl(240 30% 25%);
+  --shadow-blur: 24px;
+  --shadow-color: hsl(270 60% 20%);
   --sidebar-ring: #8839ef;
   --shadow-spread: 0px;
-  --shadow-opacity: 0.12;
+  --shadow-opacity: 0.08;
   --sidebar-accent: #04a5e5;
-  --sidebar-border: #bcc0cc;
+  --sidebar-border: #e0d8f5;
   --card-foreground: #4c4f69;
   --shadow-offset-x: 0px;
-  --shadow-offset-y: 4px;
+  --shadow-offset-y: 8px;
   --sidebar-primary: #8839ef;
   --muted-foreground: #6c6f85;
   --accent-foreground: #ffffff;
@@ -49,10 +49,10 @@
 .dark {
   --card: #1e1e2e;
   --ring: #cba6f7;
-  --input: #313244;
+  --input: #232336;
   --muted: #292c3c;
   --accent: #89dceb;
-  --border: #313244;
+  --border: #2d2b42;
   --chart-1: #cba6f7;
   --chart-2: #89dceb;
   --chart-3: #a6e3a1;
@@ -60,14 +60,14 @@
   --chart-5: #f5e0dc;
   --popover: #45475a;
   --primary: #cba6f7;
-  --sidebar: #11111b;
+  --sidebar: #161623;
   --secondary: #585b70;
-  --background: #181825;
+  --background: #12121e;
   --foreground: #cdd6f4;
   --destructive: #f38ba8;
   --sidebar-ring: #cba6f7;
   --sidebar-accent: #89dceb;
-  --sidebar-border: #45475a;
+  --sidebar-border: #2d2b42;
   --card-foreground: #cdd6f4;
   --sidebar-primary: #cba6f7;
   --muted-foreground: #a6adc8;
@@ -93,6 +93,8 @@ html, body, #root {
   background-color: var(--background);
   color: var(--foreground);
   transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Scrollbar */
@@ -106,23 +108,24 @@ html, body, #root {
   background: var(--card);
   color: var(--card-foreground);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: calc(var(--radius) * 1.5);
   box-shadow: var(--shadow-offset-x) var(--shadow-offset-y) var(--shadow-blur) var(--shadow-spread) color-mix(in srgb, var(--shadow-color) calc(var(--shadow-opacity) * 100%), transparent);
 }
 
 .btn-primary {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--accent));
   color: var(--primary-foreground);
   border: none;
   border-radius: var(--radius);
   padding: 0.5rem 1rem;
   font-family: var(--font-sans);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.1s;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 15px color-mix(in srgb, var(--primary) 30%, transparent);
 }
-.btn-primary:hover { opacity: 0.9; }
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 20px color-mix(in srgb, var(--primary) 40%, transparent); }
 .btn-primary:active { transform: scale(0.98); }
 
 .btn-ghost {
@@ -144,7 +147,7 @@ html, body, #root {
   color: var(--foreground);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 0.5rem 0.75rem;
+  padding: 0.55rem 0.875rem;
   font-family: var(--font-sans);
   font-size: 0.875rem;
   outline: none;
@@ -153,7 +156,7 @@ html, body, #root {
 }
 .input:focus {
   border-color: var(--ring);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 25%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
 }
 
 /* Animations */
