@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { auth, googleProvider, db } from '../lib/firebase'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
-import { MessageCircle, Eye, EyeOff, Loader2, Sparkles } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Sparkles } from 'lucide-react'
 import { DottedSurface } from '../components/DottedSurface'
+import logo from '../assets/logo.jpg'
 
 export default function AuthPage() {
   const [mode, setMode] = useState('login')
@@ -110,23 +111,22 @@ export default function AuthPage() {
         gap: '0.5rem',
         zIndex: 10,
       }}>
-        <div style={{
-          background: isDark
-            ? 'linear-gradient(135deg, #cba6f7, #89b4fa)'
-            : 'linear-gradient(135deg, #8839ef, #04a5e5)',
-          borderRadius: '10px',
-          padding: '0.45rem',
-          display: 'flex',
-          boxShadow: isDark ? '0 0 20px rgba(203,166,247,0.3)' : '0 0 20px rgba(136,57,239,0.25)',
-        }}>
-          <MessageCircle size={20} color="#fff" />
-        </div>
+        <img
+          src={logo}
+          alt="Twogether logo"
+          style={{
+            width: 34, height: 34,
+            borderRadius: '10px',
+            objectFit: 'cover',
+            boxShadow: isDark ? '0 0 20px rgba(203,166,247,0.3)' : '0 0 20px rgba(136,57,239,0.25)',
+          }}
+        />
         <span style={{
           fontWeight: 700,
           fontSize: '1.15rem',
           color: isDark ? '#cdd6f4' : '#4c4f69',
           letterSpacing: '-0.3px',
-        }}>Chattr</span>
+        }}>Twogether</span>
       </div>
 
       {/* Auth card */}
@@ -159,12 +159,12 @@ export default function AuthPage() {
             </span>
           </div>
           <h1 style={{ fontWeight: 800, fontSize: '1.75rem', color: isDark ? '#cdd6f4' : '#1e1e2e', lineHeight: 1.2, marginBottom: '0.4rem', letterSpacing: '-0.5px' }}>
-            {mode === 'login' ? 'Sign in to Chattr' : 'Create your account'}
+            {mode === 'login' ? 'Sign in to Twogether' : 'Create your account'}
           </h1>
           <p style={{ color: isDark ? '#a6adc8' : '#6c6f85', fontSize: '0.875rem', lineHeight: 1.5 }}>
             {mode === 'login'
               ? 'Enter your details to access your chats.'
-              : 'Join Chattr and start connecting instantly.'}
+              : 'Join Twogether and start connecting instantly.'}
           </p>
         </div>
 

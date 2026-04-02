@@ -3,12 +3,13 @@ import { auth } from '../lib/firebase'
 import { signOut as firebaseSignOut } from 'firebase/auth'
 import { useAuth } from '../contexts/AuthContext'
 import {
-  MessageCircle, Plus, Search, LogOut, Moon, Sun
+  Plus, Search, LogOut, Moon, Sun
 } from 'lucide-react'
 import NewChatModal from './NewChatModal'
 import ConversationItem from './ConversationItem'
 import UserAvatar from './UserAvatar'
 import ProfileModal from './ProfileModal'
+import logo from '../assets/logo.jpg'
 
 export default function Sidebar({ conversations, activeId, onSelect, onDelete, isOnline, isMobile }) {
   const { user, profile } = useAuth()
@@ -47,14 +48,17 @@ export default function Sidebar({ conversations, activeId, onSelect, onDelete, i
         <div style={{ padding: '1rem 1rem 0.75rem', borderBottom: '1px solid var(--sidebar-border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.875rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{
-                background: 'linear-gradient(135deg, var(--sidebar-primary), var(--sidebar-accent))',
-                borderRadius: '10px', padding: '0.4rem', display: 'flex',
-                boxShadow: '0 2px 12px color-mix(in srgb, var(--sidebar-primary) 35%, transparent)'
-              }}>
-                <MessageCircle size={18} color="#fff" />
-              </div>
-              <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--sidebar-foreground)', letterSpacing: '-0.3px' }}>Chattr</span>
+              <img
+                src={logo}
+                alt="Twogether logo"
+                style={{
+                  width: 32, height: 32,
+                  borderRadius: '8px',
+                  objectFit: 'cover',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                }}
+              />
+              <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--sidebar-foreground)', letterSpacing: '-0.3px' }}>Twogether</span>
             </div>
             <div style={{ display: 'flex', gap: '0.25rem' }}>
               <button className="btn-ghost" onClick={toggleDark}

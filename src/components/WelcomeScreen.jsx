@@ -1,4 +1,4 @@
-import { MessageCircle } from 'lucide-react'
+import logo from '../assets/logo.jpg'
 
 export default function WelcomeScreen() {
   return (
@@ -25,15 +25,16 @@ export default function WelcomeScreen() {
 
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
         <div style={{
-          background: 'linear-gradient(135deg, var(--primary), var(--accent))',
-          borderRadius: '50%', padding: '1.25rem',
+          borderRadius: '50%',
+          overflow: 'hidden',
+          width: 80, height: 80,
           marginBottom: '0.5rem',
           boxShadow: '0 8px 32px color-mix(in srgb, var(--primary) 30%, transparent)',
         }}>
-          <MessageCircle size={42} color="#fff" />
+          <img src={logo} alt="Twogether" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
         <h1 style={{ fontWeight: 800, fontSize: '1.6rem', color: 'var(--foreground)', textAlign: 'center', letterSpacing: '-0.5px' }}>
-          Welcome to Chattr
+          Welcome to Twogether
         </h1>
         <p style={{ color: 'var(--muted-foreground)', textAlign: 'center', maxWidth: '300px', fontSize: '0.875rem', lineHeight: 1.7 }}>
           Select a conversation from the sidebar or start a new one by pressing the <strong>+</strong> button.
