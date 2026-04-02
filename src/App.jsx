@@ -41,11 +41,10 @@ class ErrorBoundary extends Component {
           >
             Refresh
           </button>
-          {import.meta.env.DEV && (
-            <pre style={{ marginTop: '1rem', fontSize: '0.7rem', color: '#f38ba8', maxWidth: '600px', textAlign: 'left', whiteSpace: 'pre-wrap' }}>
-              {this.state.error?.toString()}
-            </pre>
-          )}
+          {/* Always show error for diagnosis */}
+          <pre style={{ marginTop: '1rem', fontSize: '0.7rem', color: '#f38ba8', maxWidth: '600px', textAlign: 'left', whiteSpace: 'pre-wrap' }}>
+            {this.state.error?.toString()}
+          </pre>
         </div>
       )
     }
