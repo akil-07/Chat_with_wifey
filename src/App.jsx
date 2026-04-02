@@ -1,7 +1,57 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Component } from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import AuthPage from './pages/AuthPage'
 import ChatPage from './pages/ChatPage'
+
+// Global error boundary — catches any runtime crash and shows a useful fallback
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+  componentDidCatch(error, info) {
+    console.error('App crashed:', error, info)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: '100vh', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          background: '#12121e', color: '#cdd6f4', padding: '2rem', textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💬</div>
+          <h1 style={{ fontWeight: 700, fontSize: '1.5rem', marginBottom: '0.5rem' }}>
+            Twogether
+          </h1>
+          <p style={{ color: '#a6adc8', marginBottom: '1.5rem' }}>
+            Something went wrong. Please refresh the page.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              background: 'linear-gradient(135deg, #8839ef, #04a5e5)',
+              color: '#fff', border: 'none', borderRadius: '0.75rem',
+              padding: '0.75rem 1.5rem', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem'
+            }}
+          >
+            Refresh
+          </button>
+          {import.meta.env.DEV && (
+            <pre style={{ marginTop: '1rem', fontSize: '0.7rem', color: '#f38ba8', maxWidth: '600px', textAlign: 'left', whiteSpace: 'pre-wrap' }}>
+              {this.state.error?.toString()}
+            </pre>
+          )}
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -34,31 +84,22 @@ export default function App() {
           <p style={{ color: 'var(--muted-foreground)', marginBottom: '1rem', lineHeight: 1.6 }}>
             The application is running, but you need to configure your Firebase credentials.
           </p>
-          <ol style={{ paddingLeft: '1.5rem', marginBottom: '1.5rem', color: 'var(--foreground)', lineHeight: 1.8, fontSize: '0.9rem' }}>
-            <li>Create a project at <strong>firebase.google.com</strong></li>
-            <li>Add a Web App inside the project settings</li>
-            <li>Enable <strong>Firestore</strong> and <strong>Authentication</strong> (Email/Pwd, Google)</li>
-            <li>Copy your Firebase Config object</li>
-            <li>Paste the values into your local <code>.env</code> file</li>
-          </ol>
-          <p style={{ color: 'var(--muted-foreground)', fontSize: '0.85rem' }}>
-            Looking for: <code>c:\Users\akils\OneDrive\Desktop\Chat App\.env</code>
-          </p>
         </div>
       </div>
     )
   }
 
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />
-          <Route path="/app" element={<PrivateRoute><ChatPage /></PrivateRoute>} />
-          <Route path="*" element={<Navigate to="/app" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />
+            <Route path="/app" element={<PrivateRoute><ChatPage /></PrivateRoute>} />
+            <Route path="*" element={<Navigate to="/app" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
-
