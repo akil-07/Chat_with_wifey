@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { db } from '../lib/firebase'
-import { collection, query, where, orderBy, onSnapshot, getDocs, doc, setDoc, updateDoc, writeBatch, deleteDoc } from 'firebase/firestore'
+import { collection, query, where, orderBy, onSnapshot, getDocs, doc, setDoc, updateDoc, writeBatch, deleteDoc, arrayUnion } from 'firebase/firestore'
 import { useAuth } from '../contexts/AuthContext'
 import { Send, Paperclip, X, FileText, Loader2, Trash2, MoreVertical, ArrowLeft } from 'lucide-react'
 import MessageBubble from './MessageBubble'
@@ -36,7 +36,18 @@ export default function ChatWindow({ conversation, isOnline, isMobile, onBack })
       msgs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       setMessages(msgs)
       setLoadingMsgs(false)
-      
+
+      // Mark all incoming (not mine) messages as read
+      const unread = snap.docs.filter(d => {
+        const data = d.data()
+        return data.sender_id !== user.uid && !(data.read_by || []).includes(user.uid)
+      })
+      if (unread.length > 0) {
+        const batch = writeBatch(db)
+        unread.forEach(d => batch.update(d.ref, { read_by: arrayUnion(user.uid) }))
+        batch.commit().catch(() => {}) // silent fail
+      }
+
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
       }, 50)
@@ -145,6 +156,7 @@ export default function ChatWindow({ conversation, isOnline, isMobile, onBack })
       content: text.trim() || null,
       file_url,
       created_at: new Date().toISOString(),
+      read_by: [user.uid], // sender has implicitly 'read' their own message
       profiles: { username: profile?.username, avatar_url: profile?.avatar_url }
     })
 
@@ -264,6 +276,8 @@ export default function ChatWindow({ conversation, isOnline, isMobile, onBack })
             showAvatar={!conversation.is_group || msg.sender_id !== messages[i - 1]?.sender_id}
             isGroup={conversation.is_group}
             onDelete={() => deleteMessage(msg.id)}
+            conversationUserIds={conversation.userIds || []}
+            currentUserId={user?.uid}
           />
         ))}
       </div>

@@ -2,7 +2,7 @@ import UserAvatar from './UserAvatar'
 import { Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
-export default function MessageBubble({ message, isMine, showAvatar, isGroup, onDelete }) {
+export default function MessageBubble({ message, isMine, showAvatar, isGroup, onDelete, conversationUserIds, currentUserId }) {
   // Detect both URL-based images and base64 data URLs (what Firestore stores)
   const isImage = message.file_url && (
     /^data:image\//i.test(message.file_url) ||
@@ -10,6 +10,15 @@ export default function MessageBubble({ message, isMine, showAvatar, isGroup, on
   )
   const isFile = message.file_url && !isImage
   const [hover, setHover] = useState(false)
+
+  // --- Read receipt logic ---
+  // Other members in the conversation (not the sender)
+  const otherIds = (conversationUserIds || []).filter(id => id !== message.sender_id)
+  const readBy = message.read_by || []
+  // Has every other participant read it?
+  const isRead = otherIds.length > 0 && otherIds.every(id => readBy.includes(id))
+  // Is it at least sent (in Firestore)? Yes if we can see it.
+  const isSent = true
 
   return (
     <div 
@@ -97,12 +106,50 @@ export default function MessageBubble({ message, isMine, showAvatar, isGroup, on
           )}
         </div>
 
-        {/* Timestamp */}
-        <span style={{ fontSize: '0.65rem', color: 'var(--muted-foreground)', paddingInline: '0.375rem' }}>
-          {formatTime(message.created_at)}
-        </span>
+        {/* Timestamp + Read receipt ticks */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', paddingInline: '0.375rem' }}>
+          <span style={{ fontSize: '0.65rem', color: 'var(--muted-foreground)' }}>
+            {formatTime(message.created_at)}
+          </span>
+          {/* Show ticks only for my own messages */}
+          {isMine && <MessageTicks isSent={isSent} isRead={isRead} />}
+        </div>
       </div>
     </div>
+  )
+}
+
+// WhatsApp-style tick component
+function MessageTicks({ isSent, isRead }) {
+  const color = isRead ? '#53bdeb' : '#8a8a8a' // blue when read, grey otherwise
+
+  return (
+    <svg
+      width="16"
+      height="11"
+      viewBox="0 0 16 11"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ flexShrink: 0 }}
+      title={isRead ? 'Seen' : 'Sent'}
+    >
+      {/* First tick */}
+      <path
+        d="M1 5.5L4.5 9L10 2"
+        stroke={color}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Second tick — offset to the right for double check */}
+      <path
+        d="M5 5.5L8.5 9L14 2"
+        stroke={color}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   )
 }
 
