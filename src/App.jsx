@@ -43,7 +43,7 @@ class ErrorBoundary extends Component {
           </button>
           {/* Always show error for diagnosis */}
           <pre style={{ marginTop: '1rem', fontSize: '0.7rem', color: '#f38ba8', maxWidth: '600px', textAlign: 'left', whiteSpace: 'pre-wrap' }}>
-            {this.state.error?.toString()}
+            {import.meta.env.DEV ? this.state.error?.toString() : null}
           </pre>
         </div>
       )

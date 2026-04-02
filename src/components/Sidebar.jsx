@@ -3,7 +3,7 @@ import { auth } from '../lib/firebase'
 import { signOut as firebaseSignOut } from 'firebase/auth'
 import { useAuth } from '../contexts/AuthContext'
 import {
-  Plus, Search, LogOut, Moon, Sun
+  MessageCircle, Plus, Search, LogOut, Moon, Sun
 } from 'lucide-react'
 import NewChatModal from './NewChatModal'
 import ConversationItem from './ConversationItem'
