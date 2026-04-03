@@ -7,29 +7,29 @@ export function DottedSurface({ className = '', darkMode = false, ...props }) {
     if (!containerRef.current) return
 
     let animationId
-    let renderer
     let THREE
 
     async function init() {
       try {
-        // Dynamic import so a THREE.js failure won't crash the whole app
         THREE = await import('three')
 
-        const SEPARATION = 150
-        const AMOUNTX = 40
-        const AMOUNTY = 60
+        const SEPARATION = 130
+        const AMOUNTX = 60
+        const AMOUNTY = 45
 
         const scene = new THREE.Scene()
 
+        // Camera positioned high and back — looking down at the wave surface like the reference
         const camera = new THREE.PerspectiveCamera(
-          60,
+          55,
           window.innerWidth / window.innerHeight,
           1,
           10000
         )
-        camera.position.set(0, 355, 1220)
+        camera.position.set(0, 280, 900)
+        camera.lookAt(0, -60, 0)
 
-        renderer = new THREE.WebGLRenderer({
+        const renderer = new THREE.WebGLRenderer({
           alpha: true,
           antialias: true,
         })
@@ -40,8 +40,9 @@ export function DottedSurface({ className = '', darkMode = false, ...props }) {
         if (!containerRef.current) return
         containerRef.current.appendChild(renderer.domElement)
 
+        // Build dot grid
         const positions = []
-        const colors = []
+        const sizes = []
         const geometry = new THREE.BufferGeometry()
 
         for (let ix = 0; ix < AMOUNTX; ix++) {
@@ -51,22 +52,19 @@ export function DottedSurface({ className = '', darkMode = false, ...props }) {
               0,
               iy * SEPARATION - (AMOUNTY * SEPARATION) / 2
             )
-            if (darkMode) {
-              colors.push(0.8, 0.7, 1.0)
-            } else {
-              colors.push(0.53, 0.22, 0.94)
-            }
+            sizes.push(1)
           }
         }
 
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+        geometry.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1))
 
+        // White dots (pure white like the reference)
         const material = new THREE.PointsMaterial({
-          size: 6,
-          vertexColors: true,
+          color: 0xffffff,
+          size: 4.5,
           transparent: true,
-          opacity: darkMode ? 0.55 : 0.35,
+          opacity: 0.85,
           sizeAttenuation: true,
         })
 
@@ -77,22 +75,24 @@ export function DottedSurface({ className = '', darkMode = false, ...props }) {
 
         const animate = () => {
           animationId = requestAnimationFrame(animate)
-          const positionAttribute = geometry.attributes.position
-          const posArr = positionAttribute.array
+
+          const posArr = geometry.attributes.position.array
 
           let i = 0
           for (let ix = 0; ix < AMOUNTX; ix++) {
             for (let iy = 0; iy < AMOUNTY; iy++) {
+              // Wave amplitude scales with distance from camera (smaller far away)
+              const waveFactor = Math.max(0.3, 1 - iy / AMOUNTY)
               posArr[i * 3 + 1] =
-                Math.sin((ix + count) * 0.3) * 50 +
-                Math.sin((iy + count) * 0.5) * 50
+                (Math.sin((ix + count) * 0.3) * 80 +
+                  Math.sin((iy + count) * 0.5) * 80) * waveFactor
               i++
             }
           }
 
-          positionAttribute.needsUpdate = true
+          geometry.attributes.position.needsUpdate = true
           renderer.render(scene, camera)
-          count += 0.07
+          count += 0.055
         }
 
         const handleResize = () => {
@@ -104,7 +104,6 @@ export function DottedSurface({ className = '', darkMode = false, ...props }) {
         window.addEventListener('resize', handleResize)
         animate()
 
-        // Store cleanup in ref so it runs on unmount
         containerRef._cleanup = () => {
           window.removeEventListener('resize', handleResize)
           cancelAnimationFrame(animationId)
@@ -116,7 +115,6 @@ export function DottedSurface({ className = '', darkMode = false, ...props }) {
           }
         }
       } catch (err) {
-        // WebGL not available or THREE failed — silently degrade, no crash
         console.warn('DottedSurface: WebGL not available', err)
       }
     }

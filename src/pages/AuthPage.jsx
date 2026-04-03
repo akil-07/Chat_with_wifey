@@ -75,9 +75,7 @@ export default function AuthPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: isDark
-        ? 'radial-gradient(ellipse at 60% 40%, #1e1436 0%, #0d0d1a 60%, #11111b 100%)'
-        : 'radial-gradient(ellipse at 60% 40%, #e8dff7 0%, #f0ecfb 50%, #eff1f5 100%)',
+      background: '#050508', // near-black like the reference
       padding: '1rem',
       position: 'relative',
       overflow: 'hidden',
