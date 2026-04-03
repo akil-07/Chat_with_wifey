@@ -152,14 +152,31 @@ export default function AuthPage() {
       }}>
         {/* Heading */}
         <div style={{ marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-            <Sparkles size={16} style={{ color: isDark ? '#cba6f7' : '#8839ef', opacity: 0.8 }} />
-            <span style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', color: isDark ? '#cba6f7' : '#8839ef' }}>
-              {mode === 'login' ? 'Welcome back' : 'Get started'}
-            </span>
+          {/* Logo in card */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+            <img
+              src={logo}
+              alt="Twogether"
+              style={{
+                width: 48, height: 48,
+                borderRadius: '12px',
+                objectFit: 'cover',
+                boxShadow: isDark
+                  ? '0 4px 16px rgba(203,166,247,0.25)'
+                  : '0 4px 16px rgba(136,57,239,0.2)',
+              }}
+            />
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '1.25rem', color: isDark ? '#cdd6f4' : '#1e1e2e', letterSpacing: '-0.4px', lineHeight: 1.1 }}>
+                Twogether
+              </div>
+              <div style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', color: isDark ? '#cba6f7' : '#8839ef', marginTop: '0.15rem' }}>
+                {mode === 'login' ? 'Welcome back' : 'Get started'}
+              </div>
+            </div>
           </div>
-          <h1 style={{ fontWeight: 800, fontSize: '1.75rem', color: isDark ? '#cdd6f4' : '#1e1e2e', lineHeight: 1.2, marginBottom: '0.4rem', letterSpacing: '-0.5px' }}>
-            {mode === 'login' ? 'Sign in to Twogether' : 'Create your account'}
+          <h1 style={{ fontWeight: 800, fontSize: '1.5rem', color: isDark ? '#cdd6f4' : '#1e1e2e', lineHeight: 1.2, marginBottom: '0.4rem', letterSpacing: '-0.5px' }}>
+            {mode === 'login' ? 'Sign in to continue' : 'Create your account'}
           </h1>
           <p style={{ color: isDark ? '#a6adc8' : '#6c6f85', fontSize: '0.875rem', lineHeight: 1.5 }}>
             {mode === 'login'
