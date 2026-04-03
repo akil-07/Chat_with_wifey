@@ -86,12 +86,19 @@ export default function ChatPage() {
         // Identify other member for DM naming
         const otherMemberId = cData.userIds?.find(uid => uid !== user.uid)
         const otherMember = otherMemberId ? profilesMap[otherMemberId] : null
-        
+
+        // Count unread messages (not mine + not in my read_by)
+        const unreadCount = allMsgs.filter(m =>
+          m.sender_id !== user.uid &&
+          !(m.read_by || []).includes(user.uid)
+        ).length
+
         convs.push({
           id: conversationId,
           ...cData,
           lastMessage: lastMsg || null,
-          otherMember // Attach for sidebar
+          otherMember,
+          unreadCount,
         })
       }
 

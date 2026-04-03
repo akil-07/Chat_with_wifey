@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react'
 export default function ConversationItem({ conversation, active, onClick, onDelete, currentUserId, isOnline }) {
   const [hover, setHover] = useState(false)
   const lastMsg = conversation.lastMessage
+  const unread = !active ? (conversation.unreadCount || 0) : 0
 
   const preview = lastMsg
     ? lastMsg.content || (lastMsg.file_url ? '📎 Attachment' : '')
@@ -38,34 +39,61 @@ export default function ConversationItem({ conversation, active, onClick, onDele
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.15rem' }}>
           <span style={{
-            fontWeight: 600, fontSize: '0.865rem',
+            fontWeight: unread > 0 ? 700 : 600, fontSize: '0.865rem',
             color: active ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {displayName}
           </span>
-          {!hover && lastMsg && (
-            <span style={{ fontSize: '0.65rem', color: 'var(--muted-foreground)', flexShrink: 0, marginLeft: '0.375rem' }}>
-              {formatTime(lastMsg.created_at)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexShrink: 0, marginLeft: '0.375rem' }}>
+            {!hover && lastMsg && (
+              <span style={{ fontSize: '0.65rem', color: 'var(--muted-foreground)' }}>
+                {formatTime(lastMsg.created_at)}
+              </span>
+            )}
+            {hover && (
+              <button
+                className="btn-ghost"
+                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                style={{ padding: '0.2rem', color: 'var(--destructive)', opacity: 0.7 }}
+                title="Delete conversation"
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <p style={{
+            fontSize: '0.78rem',
+            color: unread > 0 ? 'var(--foreground)' : 'var(--muted-foreground)',
+            fontWeight: unread > 0 ? 500 : 400,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            flex: 1, minWidth: 0,
+          }}>
+            {preview}
+          </p>
+          {/* Unread badge */}
+          {unread > 0 && (
+            <span style={{
+              background: 'var(--chart-3)', // green
+              color: '#fff',
+              borderRadius: '99px',
+              fontSize: '0.65rem',
+              fontWeight: 700,
+              minWidth: '18px',
+              height: '18px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 5px',
+              flexShrink: 0,
+              marginLeft: '0.375rem',
+            }}>
+              {unread > 99 ? '99+' : unread}
             </span>
           )}
-          {hover && (
-            <button 
-              className="btn-ghost" 
-              onClick={(e) => { e.stopPropagation(); onDelete(); }}
-              style={{ padding: '0.2rem', color: 'var(--destructive)', opacity: 0.7 }}
-              title="Delete conversation"
-            >
-              <Trash2 size={14} />
-            </button>
-          )}
         </div>
-        <p style={{
-          fontSize: '0.78rem', color: 'var(--muted-foreground)',
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>
-          {preview}
-        </p>
       </div>
     </div>
   )
