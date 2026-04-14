@@ -11,7 +11,7 @@ import UserAvatar from './UserAvatar'
 import ProfileModal from './ProfileModal'
 import logo from '../assets/logo.jpg'
 
-export default function Sidebar({ conversations, activeId, onSelect, onDelete, isOnline, isMobile }) {
+export default function Sidebar({ conversations, loadingChats, activeId, onSelect, onDelete, isOnline, isMobile }) {
   const { user, profile } = useAuth()
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
@@ -88,7 +88,19 @@ export default function Sidebar({ conversations, activeId, onSelect, onDelete, i
 
         {/* Conversations list */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0' }}>
-          {filtered.length === 0 ? (
+          {loadingChats ? (
+            <div style={{ padding: '0.5rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', opacity: 1 - i * 0.15 }} className="animate-pulse">
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--muted)', flexShrink: 0 }} />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ width: '60%', height: 12, borderRadius: 4, background: 'var(--muted)' }} />
+                    <div style={{ width: '40%', height: 10, borderRadius: 4, background: 'var(--muted)' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--muted-foreground)', fontSize: '0.85rem' }}>
               <MessageCircle size={32} style={{ margin: '0 auto 0.75rem', opacity: 0.4 }} />
               <p>No conversations yet</p>

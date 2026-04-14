@@ -317,7 +317,16 @@ export default function ChatWindow({ conversation, isOnline, usersPresence, isMo
       }}>
         <div ref={bottomRef} style={{ height: 1 }} />
         {typingUsers.length > 0 && <TypingIndicator users={typingUsers} />}
-        {messages.map((msg, i) => (
+        {loadingMsgs ? (
+          <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '1rem', padding: '1rem 0' }}>
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} style={{ display: 'flex', justifyContent: i % 2 === 0 ? 'flex-end' : 'flex-start', opacity: 1 - i * 0.15 }} className="animate-pulse">
+                <div style={{ width: i % 2 === 0 ? '60%' : '50%', height: 48, borderRadius: '1rem', background: i % 2 === 0 ? 'var(--primary)' : 'var(--muted)', opacity: 0.5 }} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          messages.map((msg, i) => (
             <MessageBubble
               key={msg.id}
               message={msg}
@@ -329,7 +338,8 @@ export default function ChatWindow({ conversation, isOnline, usersPresence, isMo
               conversationUserIds={conversation.userIds || []}
               currentUserId={user?.uid}
             />
-        ))}
+          ))
+        )}
       </div>
 
       {/* File preview */}

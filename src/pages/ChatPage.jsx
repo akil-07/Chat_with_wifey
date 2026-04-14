@@ -13,6 +13,7 @@ import { Capacitor } from '@capacitor/core'
 export default function ChatPage() {
   const { user } = useAuth()
   const [conversations, setConversations] = useState([])
+  const [loadingChats, setLoadingChats] = useState(true)
   const [activeConversation, setActiveConversation] = useState(null)
   const [usersPresence, setUsersPresence] = useState({})
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
@@ -113,6 +114,7 @@ export default function ChatPage() {
       })
 
       setConversations(convs)
+      setLoadingChats(false)
       setActiveConversation(prev => {
         if (!prev) return prev
         const updatedActive = convs.find(c => c.id === prev.id)
@@ -163,6 +165,7 @@ export default function ChatPage() {
           >
             <Sidebar
               conversations={conversations}
+              loadingChats={loadingChats}
               activeId={activeConversation?.id}
               onSelect={setActiveConversation}
               onDelete={deleteConversation}
