@@ -77,7 +77,11 @@ export default function ChatWindow({ conversation, isOnline, usersPresence, isMo
       const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
       msgs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       setMessages(msgs)
-      setLoadingMsgs(false)
+      if (msgs.length > 0) {
+        setLoadingMsgs(false)
+      } else {
+        setTimeout(() => setLoadingMsgs(false), 1200)
+      }
 
       const unread = snap.docs.filter(d => {
         const data = d.data()
@@ -317,7 +321,7 @@ export default function ChatWindow({ conversation, isOnline, usersPresence, isMo
       }}>
         <div ref={bottomRef} style={{ height: 1 }} />
         {typingUsers.length > 0 && <TypingIndicator users={typingUsers} />}
-        {loadingMsgs ? (
+        {loadingMsgs && messages.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '1rem', padding: '1rem 0' }}>
             {[1, 2, 3, 4].map(i => (
               <div key={i} style={{ display: 'flex', justifyContent: i % 2 === 0 ? 'flex-end' : 'flex-start', opacity: 1 - i * 0.15 }} className="animate-pulse">

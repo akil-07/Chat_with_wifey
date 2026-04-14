@@ -114,7 +114,11 @@ export default function ChatPage() {
       })
 
       setConversations(convs)
-      setLoadingChats(false)
+      if (convs.length > 0) {
+        setLoadingChats(false)
+      } else {
+        setTimeout(() => setLoadingChats(false), 1200)
+      }
       setActiveConversation(prev => {
         if (!prev) return prev
         const updatedActive = convs.find(c => c.id === prev.id)

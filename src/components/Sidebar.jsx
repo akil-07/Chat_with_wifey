@@ -88,7 +88,7 @@ export default function Sidebar({ conversations, loadingChats, activeId, onSelec
 
         {/* Conversations list */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0' }}>
-          {loadingChats ? (
+          {loadingChats && conversations.length === 0 ? (
             <div style={{ padding: '0.5rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', opacity: 1 - i * 0.15 }} className="animate-pulse">
