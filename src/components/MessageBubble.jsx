@@ -1,8 +1,10 @@
 import UserAvatar from './UserAvatar'
-import { Trash2 } from 'lucide-react'
+import { Trash2, SmilePlus } from 'lucide-react'
 import { useState } from 'react'
 
-export default function MessageBubble({ message, isMine, showAvatar, isGroup, onDelete, conversationUserIds, currentUserId }) {
+const EMOJIS = ['👍','❤️','😂','😲','😢','🙏']
+
+export default function MessageBubble({ message, isMine, showAvatar, isGroup, onDelete, onReact, conversationUserIds, currentUserId }) {
   // Detect both URL-based images and base64 data URLs (what Firestore stores)
   const isImage = message.file_url && (
     /^data:image\//i.test(message.file_url) ||
@@ -10,6 +12,8 @@ export default function MessageBubble({ message, isMine, showAvatar, isGroup, on
   )
   const isFile = message.file_url && !isImage
   const [hover, setHover] = useState(false)
+  const [showReactions, setShowReactions] = useState(false)
+  const reactions = message.reactions || {}
 
   // --- Read receipt logic ---
   // Other members in the conversation (not the sender)
@@ -48,22 +52,39 @@ export default function MessageBubble({ message, isMine, showAvatar, isGroup, on
           </span>
         )}
 
-        {/* Bubble container with Action Button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexDirection: isMine ? 'row-reverse' : 'row' }}>
-          {/* Bubble */}
-          <div style={{
-            background: isMine ? 'var(--primary)' : 'var(--card)',
-            color: isMine ? 'var(--primary-foreground)' : 'var(--card-foreground)',
-            border: isMine ? 'none' : '1px solid var(--border)',
-            borderRadius: isMine
-              ? '1rem 1rem 0.25rem 1rem'
-              : '1rem 1rem 1rem 0.25rem',
-            padding: '0.5rem 0.75rem',
-            fontSize: '0.875rem',
-            lineHeight: 1.5,
-            wordBreak: 'break-word',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
-          }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexDirection: isMine ? 'row-reverse' : 'row', position: 'relative' }}>
+          {/* Reaction picker popover */}
+          {showReactions && (
+            <div style={{
+              position: 'absolute', top: '-40px', [isMine ? 'right' : 'left']: '10px',
+              background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px',
+              padding: '0.25rem 0.5rem', display: 'flex', gap: '0.5rem', zIndex: 50,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+            }}>
+              {EMOJIS.map(e => (
+                <span key={e} onClick={() => { onReact(e); setShowReactions(false); }} style={{ cursor: 'pointer', fontSize: '1.25rem' }}>{e}</span>
+              ))}
+            </div>
+          )}
+
+          {/* Bubble wrapper for click */}
+          <div style={{position: 'relative', display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start'}}>
+            <div 
+              onClick={() => setShowReactions(!showReactions)}
+              style={{
+              background: isMine ? 'var(--primary)' : 'var(--card)',
+              color: isMine ? 'var(--primary-foreground)' : 'var(--card-foreground)',
+              border: isMine ? 'none' : '1px solid var(--border)',
+              borderRadius: isMine
+                ? '1rem 1rem 0.25rem 1rem'
+                : '1rem 1rem 1rem 0.25rem',
+              padding: '0.5rem 0.75rem',
+              fontSize: '0.875rem',
+              lineHeight: 1.5,
+              wordBreak: 'break-word',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+              cursor: 'pointer'
+            }}>
             {/* Image attachment */}
             {isImage && (
               <img
@@ -91,7 +112,26 @@ export default function MessageBubble({ message, isMine, showAvatar, isGroup, on
               </a>
             )}
             {message.content && <span>{message.content}</span>}
+            </div>
+
+            {/* Render selected reactions below bubble */}
+            {Object.keys(reactions).length > 0 && (
+              <div style={{
+                display: 'flex', flexWrap: 'wrap', gap: '2px', 
+                marginTop: '-6px', zIndex: 10,
+                background: 'var(--background)', padding: '2px 4px',
+                borderRadius: '12px', border: '1px solid var(--border)',
+                alignSelf: isMine ? 'flex-end' : 'flex-start',
+                marginRight: isMine ? '10px' : 0, marginLeft: !isMine ? '10px' : 0
+              }}>
+                {[...new Set(Object.values(reactions))].map(emoji => {
+                   const count = Object.values(reactions).filter(e => e === emoji).length
+                   return <span key={emoji} style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '2px' }}>{emoji}{count > 1 ? <span style={{fontSize: '0.6rem'}}> {count}</span> : null}</span>
+                })}
+              </div>
+            )}
           </div>
+
 
           {/* Delete Button (only for own messages on hover) */}
           {isMine && hover && (

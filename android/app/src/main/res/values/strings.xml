@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Twogether</string>
+    <string name="title_activity_main">Twogether</string>
+    <string name="package_name">com.twogether.chat</string>
+    <string name="custom_url_scheme">com.twogether.chat</string>
+    <string name="server_client_id">607701397217-2obs4grgqi4opsj8idog1cmoaves4v1v.apps.googleusercontent.com</string>
+</resources>

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "607701397217",
+    "project_id": "chat-with-love-6c643",
+    "storage_bucket": "chat-with-love-6c643.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607701397217:android:eefd044d0bcdc1f2a0d1a0",
+        "android_client_info": {
+          "package_name": "com.twogether.chat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "607701397217-d5i5a0jvk95eiqqs1ts6bd5b2ir20tn7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.twogether.chat",
+            "certificate_hash": "242b27d0ab80e6d62af019425652453058b266db"
+          }
+        },
+        {
+          "client_id": "607701397217-2obs4grgqi4opsj8idog1cmoaves4v1v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9USwAAWASq87G_vQIq0N6VJ2Vlz97K-w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "607701397217-2obs4grgqi4opsj8idog1cmoaves4v1v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

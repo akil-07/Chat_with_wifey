@@ -1,0 +1,13 @@
+{
+  "appId": "com.twogether.chat",
+  "appName": "Twogether",
+  "webDir": "dist",
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": ["profile", "email"],
+      "serverClientId": "607701397217-2obs4grgqi4opsj8idog1cmoaves4v1v.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": true
+    }
+  }
+}
+

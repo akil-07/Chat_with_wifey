@@ -87,6 +87,8 @@
   padding: 0;
 }
 
+/* ... (rest of the file remains same but with these additions/changes) */
+
 html, body, #root {
   height: 100%;
   font-family: var(--font-sans);
@@ -95,10 +97,14 @@ html, body, #root {
   transition: background-color 0.3s ease, color 0.3s ease;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  user-select: none; /* Make it feel like an app */
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }
@@ -125,22 +131,22 @@ html, body, #root {
   transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
   box-shadow: 0 4px 15px color-mix(in srgb, var(--primary) 30%, transparent);
 }
-.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 20px color-mix(in srgb, var(--primary) 40%, transparent); }
-.btn-primary:active { transform: scale(0.98); }
+.btn-primary:active { transform: scale(0.96); opacity: 0.8; }
 
 .btn-ghost {
   background: transparent;
   color: var(--foreground);
   border: none;
-  border-radius: var(--radius);
-  padding: 0.5rem 1rem;
+  border-radius: 50%;
+  padding: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-sans);
-  font-size: 0.875rem;
-  font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.1s;
 }
-.btn-ghost:hover { background: var(--muted); }
+.btn-ghost:active { background: var(--muted); transform: scale(0.92); }
 
 .input {
   background: var(--input);
@@ -153,46 +159,31 @@ html, body, #root {
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
   width: 100%;
+  user-select: text; /* Allow typing */
 }
-.input:focus {
-  border-color: var(--ring);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-16px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
-}
-.animate-fade-in   { animation: fadeIn 0.25s ease both; }
-.animate-slide-in  { animation: slideInLeft 0.2s ease both; }
 
 /* Mobile fixes */
 @media (max-width: 767px) {
-  /* Prevent iOS zoom on input focus (needs font-size >= 16px) */
   .input, .auth-input, input, textarea {
     font-size: 16px !important;
   }
 
-  /* Bigger touch targets for buttons */
-  .btn-ghost {
-    min-width: 36px;
-    min-height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  /* Safe areas for phones with notches */
+  .mobile-safe-top {
+    padding-top: env(safe-area-inset-top, 0px) !important;
   }
-
-  /* Safe area for phones with notches */
-  main, aside {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+  
+  .mobile-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
   }
 }
+
+.page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+

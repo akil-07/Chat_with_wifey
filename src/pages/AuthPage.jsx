@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { auth, googleProvider, db } from '../lib/firebase'
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth'
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInWithCredential } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
+import { Capacitor } from '@capacitor/core'
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth'
 import { Eye, EyeOff, Loader2, Sparkles } from 'lucide-react'
 import { DottedSurface } from '../components/DottedSurface'
 import { SignInCard } from '../components/ui/sign-in-card-2'
@@ -19,6 +21,15 @@ export default function AuthPage() {
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
+    // Initialize Capacitor Google Auth
+    if (Capacitor.isNativePlatform()) {
+       GoogleAuth.initialize({
+         clientId: '607701397217-2obs4grgqi4opsj8idog1cmoaves4v1v.apps.googleusercontent.com',
+         scopes: ['profile', 'email'],
+         grantOfflineAccess: true,
+       })
+    }
+
     const check = () => setIsDark(document.documentElement.classList.contains('dark'))
     check()
     const observer = new MutationObserver(check)
@@ -29,7 +40,14 @@ export default function AuthPage() {
   async function handleGoogleLogin() {
     setError(''); setSuccess(''); setLoading(true)
     try {
-      const res = await signInWithPopup(auth, googleProvider)
+      let res
+      if (Capacitor.isNativePlatform()) {
+        const googleUser = await GoogleAuth.signIn()
+        const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken)
+        res = await signInWithCredential(auth, credential)
+      } else {
+        res = await signInWithPopup(auth, googleProvider)
+      }
       const profileRef = doc(db, 'profiles', res.user.uid)
       const profileSnap = await getDoc(profileRef)
       if (!profileSnap.exists()) {
