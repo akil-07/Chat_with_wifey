@@ -40,31 +40,53 @@ export default function AuthPage() {
   async function handleGoogleLogin() {
     setError(''); setSuccess(''); setLoading(true)
     try {
-      let res
       if (Capacitor.isNativePlatform()) {
         const googleUser = await GoogleAuth.signIn()
         const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken)
-        res = await signInWithCredential(auth, credential)
+        const res = await signInWithCredential(auth, credential)
+        await createProfileIfNotExists(res)
+        setLoading(false)
       } else {
-        res = await signInWithPopup(auth, googleProvider)
-      }
-      const profileRef = doc(db, 'profiles', res.user.uid)
-      const profileSnap = await getDoc(profileRef)
-      if (!profileSnap.exists()) {
-        const defaultName = res.user.displayName || res.user.email.split('@')[0]
-        const formattedName = defaultName.toLowerCase().replace(/\s+/g, '') + Math.floor(Math.random() * 1000)
-        await setDoc(profileRef, {
-          username: formattedName,
-          avatar_url: res.user.photoURL,
-          created_at: new Date().toISOString()
+        // For PWAs and Mobile Safari, redirect is mathematically more stable than popup
+        import('firebase/auth').then(({ signInWithRedirect }) => {
+          signInWithRedirect(auth, googleProvider).catch(err => {
+            setError(err.message)
+            setLoading(false)
+          })
         })
       }
     } catch (err) {
       setError(err.message)
-    } finally {
       setLoading(false)
     }
   }
+
+  async function createProfileIfNotExists(res) {
+    const profileRef = doc(db, 'profiles', res.user.uid)
+    const profileSnap = await getDoc(profileRef)
+    if (!profileSnap.exists()) {
+      const defaultName = res.user.displayName || res.user.email.split('@')[0]
+      const formattedName = defaultName.toLowerCase().replace(/\s+/g, '') + Math.floor(Math.random() * 1000)
+      await setDoc(profileRef, {
+        username: formattedName,
+        avatar_url: res.user.photoURL,
+        created_at: new Date().toISOString()
+      })
+    }
+  }
+
+  // Handle redirect result for Web/PWA
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      import('firebase/auth').then(({ getRedirectResult }) => {
+        getRedirectResult(auth).then(async (res) => {
+          if (res) {
+            await createProfileIfNotExists(res)
+          }
+        }).catch(err => setError(err.message))
+      })
+    }
+  }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
