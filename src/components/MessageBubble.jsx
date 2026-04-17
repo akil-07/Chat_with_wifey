@@ -111,6 +111,10 @@ export default function MessageBubble({ message, isMine, showAvatar, isGroup, on
                 📎 {decodeURIComponent(message.file_url.split('/').pop())}
               </a>
             )}
+            {/* Audio attachment */}
+            {message.audio_url && (
+              <audio src={message.audio_url} controls style={{ width: '240px', maxWidth: '100%', height: '40px', marginBottom: message.content ? '0.5rem' : 0 }} />
+            )}
             {message.content && <span>{message.content}</span>}
             </div>
 

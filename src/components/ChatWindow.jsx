@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import { db } from '../lib/firebase'
+import { db, storage } from '../lib/firebase'
 import { collection, query, where, onSnapshot, getDocs, doc, setDoc, updateDoc, writeBatch, deleteDoc, arrayUnion } from 'firebase/firestore'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useAuth } from '../contexts/AuthContext'
-import { Send, Paperclip, X, FileText, Loader2, Trash2, ArrowLeft, Image, Camera } from 'lucide-react'
+import { Send, Paperclip, X, FileText, Loader2, Trash2, ArrowLeft, Image, Camera, Mic, Square } from 'lucide-react'
+import { useAudioRecorder } from '../hooks/useAudioRecorder'
 import MessageBubble from './MessageBubble'
 import TypingIndicator from './TypingIndicator'
 import UserAvatar from './UserAvatar'
@@ -20,6 +22,7 @@ export default function ChatWindow({ conversation, isOnline, usersPresence, isMo
   const [filePreview, setFilePreview] = useState(null)
   const [fileObj, setFileObj] = useState(null)
   const [loadingMsgs, setLoadingMsgs] = useState(true)
+  const { isRecording, recordingTime, audioUrl, startRecording, stopRecording, cancelRecording, getAudioBlob, resetRecordingState } = useAudioRecorder()
   
   const bottomRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -222,6 +225,38 @@ export default function ChatWindow({ conversation, isOnline, usersPresence, isMo
     setSending(false)
   }
 
+  async function sendAudio() {
+    const blob = getAudioBlob()
+    if (!blob || !storage) return
+    triggerHaptic()
+    setSending(true)
+    try {
+      const audioRef = ref(storage, `audio_messages/${conversation.id}/${Date.now()}_audio.webm`)
+      await uploadBytes(audioRef, blob)
+      const audio_url = await getDownloadURL(audioRef)
+      
+      const newMsgId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      await setDoc(doc(db, 'messages', newMsgId), {
+        conversation_id: conversation.id,
+        sender_id: user.uid,
+        content: null,
+        file_url: null,
+        audio_url: audio_url,
+        created_at: new Date().toISOString(),
+        read_by: [user.uid],
+        profiles: { username: profile?.username, avatar_url: profile?.avatar_url }
+      })
+      await updateDoc(doc(db, 'conversations', conversation.id), {
+        updated_at: new Date().toISOString()
+      })
+    } catch (err) {
+      console.error(err)
+      alert("Failed to send audio.")
+    }
+    resetRecordingState()
+    setSending(false)
+  }
+
   async function deleteMessage(msgId) {
     if (!window.confirm("Delete this message?")) return
     try {
@@ -398,43 +433,85 @@ export default function ChatWindow({ conversation, isOnline, usersPresence, isMo
         <div onClick={() => setShowAttachMenu(false)} style={{ position: 'absolute', inset: 0, zIndex: 99 }} />
       )}
 
-      {/* Input Bar */}
-      <form onSubmit={sendMessage} className="mobile-safe-bottom" style={{
-        padding: isMobile ? '0.5rem 0.75rem' : '0.875rem 1.25rem',
-        borderTop: '1px solid var(--border)',
-        background: 'var(--card)',
-        display: 'flex',
-        gap: '0.5rem',
-        alignItems: 'flex-end',
-        position: 'relative',
-      }}>
-        {/* Hidden web file input */}
-        <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx,.txt" style={{ display: 'none' }} onChange={handleFileChange} />
+      {/* Input Bar / Audio Recorder */}
+      {audioUrl ? (
+        <div className="mobile-safe-bottom" style={{
+          padding: isMobile ? '0.5rem 0.75rem' : '0.875rem 1.25rem', borderTop: '1px solid var(--border)', background: 'var(--card)', display: 'flex', gap: '0.5rem', alignItems: 'center'
+        }}>
+          <button type="button" className="btn-ghost" onClick={() => { triggerHaptic(); resetRecordingState(); }} style={{ padding: '0.5rem', color: 'var(--destructive)', flexShrink: 0 }}>
+            <Trash2 size={24} />
+          </button>
+          <div style={{ flex: 1, background: 'var(--input)', borderRadius: '24px', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center' }}>
+             <audio src={audioUrl} controls style={{ width: '100%', height: '35px' }} />
+          </div>
+          <button type="button" onClick={sendAudio} className="btn-primary" disabled={sending}
+            style={{ width: '44px', height: '44px', borderRadius: '50%', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            {sending ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={18} />}
+          </button>
+        </div>
+      ) : isRecording ? (
+        <div className="mobile-safe-bottom" style={{
+          padding: isMobile ? '0.5rem 0.75rem' : '0.875rem 1.25rem', borderTop: '1px solid var(--border)', background: 'var(--card)', display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'space-between'
+        }}>
+          <button type="button" className="btn-ghost" onClick={() => { triggerHaptic(); cancelRecording(); }} style={{ padding: '0.5rem', color: 'var(--destructive)' }}>
+            <Trash2 size={24} />
+          </button>
 
-        {/* Attach button */}
-        <button type="button" className="btn-ghost"
-          onClick={() => { triggerHaptic(); setShowAttachMenu(v => !v) }}
-          style={{ padding: '0.5rem', color: showAttachMenu ? 'var(--primary)' : 'var(--muted-foreground)', flexShrink: 0 }}>
-          <Paperclip size={20} />
-        </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--destructive)', fontWeight: 600, animation: 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: 'var(--destructive)' }} />
+            {Math.floor(recordingTime / 60).toString().padStart(2, '0')}:{(recordingTime % 60).toString().padStart(2, '0')}
+          </div>
 
-        <input
-          className="input"
-          placeholder="Type a message…"
-          value={text}
-          onChange={e => { setText(e.target.value); handleTyping() }}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !isMobile) { e.preventDefault(); sendMessage(e) } }}
-          style={{ flex: 1, borderRadius: '24px', paddingLeft: '1rem', background: 'var(--input)' }}
-        />
+          <button type="button" onClick={() => { triggerHaptic(); stopRecording(); }} className="btn-primary" disabled={sending}
+            style={{ width: '44px', height: '44px', borderRadius: '50%', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--destructive)', color: 'white', border: 'none' }}>
+            <Square size={16} fill="currentColor" />
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={sendMessage} className="mobile-safe-bottom" style={{
+          padding: isMobile ? '0.5rem 0.75rem' : '0.875rem 1.25rem',
+          borderTop: '1px solid var(--border)',
+          background: 'var(--card)',
+          display: 'flex',
+          gap: '0.5rem',
+          alignItems: 'flex-end',
+          position: 'relative',
+        }}>
+          {/* Hidden web file input */}
+          <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx,.txt" style={{ display: 'none' }} onChange={handleFileChange} />
 
-        <button type="submit" className="btn-primary" disabled={sending || (!text.trim() && !fileObj)}
-          style={{ width: '44px', height: '44px', borderRadius: '50%', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          {sending
-            ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
-            : <Send size={18} />
-          }
-        </button>
-      </form>
+          {/* Attach button */}
+          <button type="button" className="btn-ghost"
+            onClick={() => { triggerHaptic(); setShowAttachMenu(v => !v) }}
+            style={{ padding: '0.5rem', color: showAttachMenu ? 'var(--primary)' : 'var(--muted-foreground)', flexShrink: 0 }}>
+            <Paperclip size={20} />
+          </button>
+
+          <input
+            className="input"
+            placeholder="Type a message…"
+            value={text}
+            onChange={e => { setText(e.target.value); handleTyping() }}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !isMobile) { e.preventDefault(); sendMessage(e) } }}
+            style={{ flex: 1, borderRadius: '24px', paddingLeft: '1rem', background: 'var(--input)' }}
+          />
+
+          {text.trim() || fileObj ? (
+            <button type="submit" className="btn-primary" disabled={sending}
+              style={{ width: '44px', height: '44px', borderRadius: '50%', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {sending
+                ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                : <Send size={18} />
+              }
+            </button>
+          ) : (
+            <button type="button" className="btn-primary" onClick={() => { triggerHaptic(); startRecording(); }} disabled={sending}
+              style={{ width: '44px', height: '44px', borderRadius: '50%', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Mic size={18} />
+            </button>
+          )}
+        </form>
+      )}
     </main>
   )
 }
