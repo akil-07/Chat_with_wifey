@@ -35,24 +35,43 @@ export function useAudioCall(userId) {
     };
   }, [localStream, pc]);
 
-  // Listen for incoming calls
+  // Listen for incoming calls — only filter by calleeId (single field, no composite index needed)
+  // Status is filtered in JavaScript below
   useEffect(() => {
     if (!userId || !db) return;
 
     const q = query(
       collection(db, 'calls'),
-      where('calleeId', '==', userId),
-      where('status', '==', 'ringing')
+      where('calleeId', '==', userId)
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === 'added') {
-          setIncomingCall({ id: change.doc.id, ...change.doc.data() });
-          setCallStatus('ringing');
-        }
-      });
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'added') {
+            const data = change.doc.data();
+            // Filter status in JS — avoids needing a Firestore composite index
+            if (data.status === 'ringing') {
+              setIncomingCall({ id: change.doc.id, ...data });
+              setCallStatus('ringing');
+            }
+          }
+          if (change.type === 'modified') {
+            const data = change.doc.data();
+            // If the call we're ringing for was rejected/ended remotely
+            if (data.status === 'ended' || data.status === 'rejected') {
+              setIncomingCall(null);
+              setCallStatus('idle');
+            }
+          }
+        });
+      },
+      (error) => {
+        // Silently handle permission errors — don't crash the app
+        console.warn('Calls listener error (check Firestore rules):', error.code, error.message);
+      }
+    );
 
     return () => unsubscribe();
   }, [userId]);
