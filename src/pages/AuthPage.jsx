@@ -47,12 +47,17 @@ export default function AuthPage() {
         await createProfileIfNotExists(res)
         setLoading(false)
       } else {
-        // For PWAs and Mobile Safari, redirect is mathematically more stable than popup
-        import('firebase/auth').then(({ signInWithRedirect }) => {
-          signInWithRedirect(auth, googleProvider).catch(err => {
-            setError(err.message)
-            setLoading(false)
-          })
+        // Use Popup for web/desktop for better reliability and to avoid redirect 404 issues
+        import('firebase/auth').then(({ signInWithPopup }) => {
+          signInWithPopup(auth, googleProvider)
+            .then(async (res) => {
+              await createProfileIfNotExists(res)
+              setLoading(false)
+            })
+            .catch(err => {
+              setError(err.message)
+              setLoading(false)
+            })
         })
       }
     } catch (err) {
@@ -75,18 +80,6 @@ export default function AuthPage() {
     }
   }
 
-  // Handle redirect result for Web/PWA
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) {
-      import('firebase/auth').then(({ getRedirectResult }) => {
-        getRedirectResult(auth).then(async (res) => {
-          if (res) {
-            await createProfileIfNotExists(res)
-          }
-        }).catch(err => setError(err.message))
-      })
-    }
-  }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()

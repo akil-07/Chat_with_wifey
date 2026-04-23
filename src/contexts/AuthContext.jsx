@@ -17,8 +17,10 @@ export function AuthProvider({ children }) {
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log('Auth state changed:', firebaseUser ? 'User present' : 'No user');
       setUser(firebaseUser)
       if (firebaseUser) {
+        console.log('Fetching profile for:', firebaseUser.uid);
         await fetchProfile(firebaseUser.uid)
       } else {
         setProfile(null)
@@ -30,14 +32,21 @@ export function AuthProvider({ children }) {
   }, [])
 
   async function fetchProfile(userId) {
-    if (!db) return
+    if (!db) {
+      console.warn('Firestore (db) not initialized in fetchProfile');
+      setLoading(false);
+      return;
+    }
     try {
       const snap = await getDoc(doc(db, 'profiles', userId))
       if (snap.exists()) {
+        console.log('Profile found:', snap.data().username);
         setProfile({ id: snap.id, ...snap.data() })
+      } else {
+        console.warn('No profile document found for user:', userId);
       }
     } catch (e) {
-      console.error(e)
+      console.error('Error fetching profile:', e)
     } finally {
       setLoading(false)
     }
