@@ -1,8 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Component } from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { AudioCallProvider } from './contexts/AudioCallContext'
 import AuthPage from './pages/AuthPage'
 import ChatPage from './pages/ChatPage'
+import IncomingCallBanner from './components/IncomingCallBanner'
+import AudioCallModal from './components/AudioCallModal'
 
 // Global error boundary — catches any runtime crash and shows a useful fallback
 class ErrorBoundary extends Component {
@@ -41,7 +44,6 @@ class ErrorBoundary extends Component {
           >
             Refresh
           </button>
-          {/* Always show error for diagnosis */}
           <pre style={{ marginTop: '1rem', fontSize: '0.7rem', color: '#f38ba8', maxWidth: '600px', textAlign: 'left', whiteSpace: 'pre-wrap' }}>
             {import.meta.env.DEV ? this.state.error?.toString() : null}
           </pre>
@@ -65,17 +67,19 @@ function PrivateRoute({ children }) {
 
 function PublicRoute({ children }) {
   const { user, loading } = useAuth()
-  if (loading) return null
+  // Show spinner while auth is resolving — prevents premature redirects
+  if (loading) return (
+    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--background)' }}>
+      <div style={{ width: 36, height: 36, border: '3px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
   return user ? <Navigate to="/app" replace /> : children
 }
 
-import { AudioCallProvider } from './contexts/AudioCallContext'
-import IncomingCallBanner from './components/IncomingCallBanner'
-import AudioCallModal from './components/AudioCallModal'
-
 export default function App() {
-  const isConfigured = 
-    import.meta.env.VITE_FIREBASE_API_KEY && 
+  const isConfigured =
+    import.meta.env.VITE_FIREBASE_API_KEY &&
     import.meta.env.VITE_FIREBASE_PROJECT_ID &&
     !import.meta.env.VITE_FIREBASE_API_KEY.includes('your_api_key')
 
