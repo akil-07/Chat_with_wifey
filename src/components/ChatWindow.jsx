@@ -22,7 +22,7 @@ export default function ChatWindow({ conversation, isOnline, usersPresence, isMo
   const [filePreview, setFilePreview] = useState(null)
   const [fileObj, setFileObj] = useState(null)
   const [loadingMsgs, setLoadingMsgs] = useState(true)
-  const { isRecording, recordingTime, audioUrl, startRecording, stopRecording, cancelRecording, getAudioBlob, resetRecordingState } = useAudioRecorder()
+  const { isRecording, recordingTime, audioUrl, audioBlobMime, startRecording, stopRecording, cancelRecording, getAudioBlob, resetRecordingState } = useAudioRecorder()
   
   const bottomRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -227,13 +227,29 @@ export default function ChatWindow({ conversation, isOnline, usersPresence, isMo
 
   async function sendAudio() {
     const blob = getAudioBlob()
-    if (!blob || !storage) return
+    if (!blob) {
+      console.warn('sendAudio: no blob available')
+      return
+    }
+    
     triggerHaptic()
     setSending(true)
+    
+    // Max 1MB roughly (base64 adds ~33% overhead, Firestore limit is 1MB per doc)
+    if (blob.size > 700000) {
+        alert("Audio message is too long. Please keep it under 45 seconds.");
+        setSending(false);
+        return;
+    }
+
     try {
-      const audioRef = ref(storage, `audio_messages/${conversation.id}/${Date.now()}_audio.webm`)
-      await uploadBytes(audioRef, blob)
-      const audio_url = await getDownloadURL(audioRef)
+      // Convert Blob to Base64 Data URL
+      const base64AudioUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
       
       const newMsgId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       await setDoc(doc(db, 'messages', newMsgId), {
@@ -241,19 +257,20 @@ export default function ChatWindow({ conversation, isOnline, usersPresence, isMo
         sender_id: user.uid,
         content: null,
         file_url: null,
-        audio_url: audio_url,
+        audio_url: base64AudioUrl,
         created_at: new Date().toISOString(),
         read_by: [user.uid],
         profiles: { username: profile?.username, avatar_url: profile?.avatar_url }
       })
+      
       await updateDoc(doc(db, 'conversations', conversation.id), {
         updated_at: new Date().toISOString()
       })
+      resetRecordingState()
     } catch (err) {
-      console.error(err)
-      alert("Failed to send audio.")
+      console.error('sendAudio failed:', err)
+      alert(`Failed to send audio: ${err?.message || 'Unknown error'}.`)
     }
-    resetRecordingState()
     setSending(false)
   }
 
