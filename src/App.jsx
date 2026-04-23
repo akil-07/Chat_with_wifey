@@ -69,6 +69,10 @@ function PublicRoute({ children }) {
   return user ? <Navigate to="/app" replace /> : children
 }
 
+import { AudioCallProvider } from './contexts/AudioCallContext'
+import IncomingCallBanner from './components/IncomingCallBanner'
+import AudioCallModal from './components/AudioCallModal'
+
 export default function App() {
   const isConfigured = 
     import.meta.env.VITE_FIREBASE_API_KEY && 
@@ -91,13 +95,17 @@ export default function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />
-            <Route path="/app" element={<PrivateRoute><ChatPage /></PrivateRoute>} />
-            <Route path="*" element={<Navigate to="/app" replace />} />
-          </Routes>
-        </BrowserRouter>
+        <AudioCallProvider>
+          <BrowserRouter>
+            <IncomingCallBanner />
+            <AudioCallModal />
+            <Routes>
+              <Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />
+              <Route path="/app" element={<PrivateRoute><ChatPage /></PrivateRoute>} />
+              <Route path="*" element={<Navigate to="/app" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </AudioCallProvider>
       </AuthProvider>
     </ErrorBoundary>
   )

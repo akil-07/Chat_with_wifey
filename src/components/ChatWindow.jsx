@@ -3,13 +3,14 @@ import { db, storage } from '../lib/firebase'
 import { collection, query, where, onSnapshot, getDocs, doc, setDoc, updateDoc, writeBatch, deleteDoc, arrayUnion } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useAuth } from '../contexts/AuthContext'
-import { Send, Paperclip, X, FileText, Loader2, Trash2, ArrowLeft, Image, Camera, Mic, Square } from 'lucide-react'
+import { Send, Paperclip, X, FileText, Loader2, Trash2, ArrowLeft, Image, Camera, Mic, Square, Phone } from 'lucide-react'
 import { useAudioRecorder } from '../hooks/useAudioRecorder'
 import MessageBubble from './MessageBubble'
 import TypingIndicator from './TypingIndicator'
 import UserAvatar from './UserAvatar'
 import { Haptics, ImpactStyle } from '@capacitor/haptics'
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera'
+import { useAudioCallContext } from '../contexts/AudioCallContext'
 
 export default function ChatWindow({ conversation, isOnline, usersPresence, isMobile, onBack }) {
   // ... (state and effects remain the same)
@@ -23,6 +24,7 @@ export default function ChatWindow({ conversation, isOnline, usersPresence, isMo
   const [fileObj, setFileObj] = useState(null)
   const [loadingMsgs, setLoadingMsgs] = useState(true)
   const { isRecording, recordingTime, audioUrl, audioBlobMime, startRecording, stopRecording, cancelRecording, getAudioBlob, resetRecordingState } = useAudioRecorder()
+  const { startCall } = useAudioCallContext()
   
   const bottomRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -354,6 +356,12 @@ export default function ChatWindow({ conversation, isOnline, usersPresence, isMo
             }
           </p>
         </div>
+        
+        <button className="btn-ghost" onClick={() => { triggerHaptic(); startCall(otherMember?.id, profile); }} 
+          disabled={!otherMember}
+          style={{ padding: '0.5rem', color: 'var(--primary)', flexShrink: 0 }}>
+          <Phone size={18} />
+        </button>
         
         <button className="btn-ghost" onClick={clearHistory} 
           style={{ padding: '0.5rem', color: 'var(--muted-foreground)', flexShrink: 0 }}>
