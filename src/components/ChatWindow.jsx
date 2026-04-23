@@ -357,15 +357,21 @@ export default function ChatWindow({ conversation, isOnline, usersPresence, isMo
           </p>
         </div>
         
-        <button className="btn-ghost" onClick={() => { triggerHaptic(); startCall(otherMember?.id, profile); }} 
-          disabled={!otherMember}
-          style={{ padding: '0.5rem', color: 'var(--primary)', flexShrink: 0 }}>
-          <Phone size={18} />
-        </button>
-        
-        <button className="btn-ghost" onClick={clearHistory} 
-          style={{ padding: '0.5rem', color: 'var(--muted-foreground)', flexShrink: 0 }}>
-          <Trash2 size={18} />
+        {/* Phone button — only for 1:1 chats, always visible */}
+        {!conversation.is_group && (
+          <button
+            className="btn-ghost"
+            onClick={() => { triggerHaptic(); startCall(otherMember?.id, profile) }}
+            title="Start voice call"
+            style={{ padding: isMobile ? '0.25rem' : '0.5rem', color: 'var(--primary)', flexShrink: 0 }}
+          >
+            <Phone size={isMobile ? 16 : 18} />
+          </button>
+        )}
+
+        <button className="btn-ghost" onClick={clearHistory}
+          style={{ padding: isMobile ? '0.25rem' : '0.5rem', color: 'var(--muted-foreground)', flexShrink: 0 }}>
+          <Trash2 size={isMobile ? 16 : 18} />
         </button>
       </div>
 

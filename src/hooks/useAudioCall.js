@@ -59,7 +59,16 @@ export function useAudioCall(userId) {
 
   const setupPc = useCallback(async () => {
     const peerConnection = new RTCPeerConnection(servers);
-    const local = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    // Voice-call constraints: these hint to Android to use earpiece instead of speaker
+    const local = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        sampleRate: 16000,
+      },
+      video: false
+    });
     const remote = new MediaStream();
 
     local.getTracks().forEach((track) => {
