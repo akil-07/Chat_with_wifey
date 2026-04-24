@@ -7,12 +7,16 @@ export default function AudioCallModal() {
   const remoteAudioRef = useRef(null);
   const [isSpeaker, setIsSpeaker] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
+  const [playError, setPlayError] = useState(false);
 
   // Attach remote stream to audio element
   useEffect(() => {
     if (remoteAudioRef.current && remoteStream) {
       remoteAudioRef.current.srcObject = remoteStream;
-      remoteAudioRef.current.play().catch(err => console.warn('Audio play error:', err));
+      remoteAudioRef.current.play().catch(err => {
+        console.warn('Audio play error:', err);
+        setPlayError(true);
+      });
     }
   }, [remoteStream]);
 
@@ -72,12 +76,12 @@ export default function AudioCallModal() {
       padding: '2rem',
       animation: 'fadeIn 0.4s ease-out'
     }}>
-      {/* Hidden audio element — playsInline is KEY for Android earpiece routing */}
-      <audio
+      {/* Hidden video element — using <video> instead of <audio> is a common hack to force mobile browsers to use the Loudspeaker instead of the Earpiece */}
+      <video
         ref={remoteAudioRef}
         autoPlay
         playsInline
-        style={{ display: 'none' }}
+        style={{ position: 'absolute', width: 0, height: 0, opacity: 0 }}
       />
 
       {/* Avatar with pulse ring */}
@@ -109,7 +113,34 @@ export default function AudioCallModal() {
       </p>
 
       {/* Controls */}
-      <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+        {/* Playback Unlock (Mobile Fallback) */}
+        {playError && (
+          <button
+            onClick={() => {
+              if (remoteAudioRef.current) {
+                remoteAudioRef.current.play()
+                  .then(() => setPlayError(false))
+                  .catch(e => console.error('Still cannot play', e));
+              }
+            }}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '20px',
+              background: '#04a5e5',
+              border: 'none',
+              color: 'white',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              position: 'absolute',
+              top: '2rem',
+              boxShadow: '0 4px 12px rgba(4,165,229,0.4)',
+            }}
+          >
+            Tap to Hear Audio
+          </button>
+        )}
+
         {/* Mute */}
         <button
           onClick={toggleMute}
@@ -158,7 +189,14 @@ export default function AudioCallModal() {
 
         {/* Speaker toggle */}
         <button
-          onClick={handleSpeakerToggle}
+          onClick={async () => {
+            handleSpeakerToggle();
+            // Also attempt to kickstart play on any button interaction
+            if (remoteAudioRef.current && remoteAudioRef.current.paused) {
+              remoteAudioRef.current.play().catch(() => {});
+              setPlayError(false);
+            }
+          }}
           style={{
             width: '60px',
             height: '60px',

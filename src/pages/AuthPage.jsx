@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react'
 import { auth, googleProvider, db } from '../lib/firebase'
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInWithCredential } from 'firebase/auth'
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  signInWithCredential,
+  signInWithRedirect,
+  getRedirectResult
+} from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { Capacitor } from '@capacitor/core'
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth'
@@ -21,6 +29,23 @@ export default function AuthPage() {
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
+    // Handle Redirect Result (for mobile browsers)
+    if (!Capacitor.isNativePlatform()) {
+      getRedirectResult(auth)
+        .then(async (res) => {
+          if (res) {
+            setLoading(true)
+            await createProfileIfNotExists(res)
+            setLoading(false)
+          }
+        })
+        .catch((err) => {
+          console.error('Redirect Result Error:', err)
+          setError(err.message)
+          setLoading(false)
+        })
+    }
+
     // Initialize Capacitor Google Auth
     if (Capacitor.isNativePlatform()) {
        GoogleAuth.initialize({
@@ -47,18 +72,18 @@ export default function AuthPage() {
         await createProfileIfNotExists(res)
         setLoading(false)
       } else {
-        // Use Popup for web/desktop for better reliability and to avoid redirect 404 issues
-        import('firebase/auth').then(({ signInWithPopup }) => {
-          signInWithPopup(auth, googleProvider)
-            .then(async (res) => {
-              await createProfileIfNotExists(res)
-              setLoading(false)
-            })
-            .catch(err => {
-              setError(err.message)
-              setLoading(false)
-            })
-        })
+        // Detect mobile browser
+        const isMobileBrowser = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobileBrowser) {
+          // Use Redirect for mobile browsers to avoid popup blockers
+          await signInWithRedirect(auth, googleProvider)
+        } else {
+          // Use Popup for desktop
+          const res = await signInWithPopup(auth, googleProvider)
+          await createProfileIfNotExists(res)
+          setLoading(false)
+        }
       }
     } catch (err) {
       setError(err.message)

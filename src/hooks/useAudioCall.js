@@ -83,28 +83,28 @@ export function useAudioCall(userId) {
       audio: {
         echoCancellation: true,
         noiseSuppression: true,
-        autoGainControl: true,
-        sampleRate: 16000,
       },
       video: false
     });
-    const remote = new MediaStream();
 
     local.getTracks().forEach((track) => {
       peerConnection.addTrack(track, local);
     });
 
     peerConnection.ontrack = (event) => {
-      event.streams[0].getTracks().forEach((track) => {
-        remote.addTrack(track);
-      });
+      if (event.streams && event.streams[0]) {
+        setRemoteStream(event.streams[0]);
+      } else {
+        const inboundStream = new MediaStream();
+        inboundStream.addTrack(event.track);
+        setRemoteStream(inboundStream);
+      }
     };
 
     setPc(peerConnection);
     setLocalStream(local);
-    setRemoteStream(remote);
 
-    return { peerConnection, local, remote };
+    return { peerConnection, local };
   }, []);
 
   const startCall = async (calleeId, callerProfile) => {
@@ -140,28 +140,44 @@ export function useAudioCall(userId) {
     });
 
     setCallStatus('ringing');
+    const candidateQueue = [];
+
+    // Listen for callee ICE candidates immediately, queue if remote description not ready
+    onSnapshot(calleeCandidates, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === 'added') {
+          const candidateData = change.doc.data();
+          const candidate = new RTCIceCandidate(candidateData);
+          if (peerConnection.remoteDescription) {
+            peerConnection.addIceCandidate(candidate).catch(e => console.error('Error adding ICE candidate', e));
+          } else {
+            candidateQueue.push(candidate);
+          }
+        }
+      });
+    });
 
     // Listen for remote answer
-    onSnapshot(callDoc, (snapshot) => {
+    onSnapshot(callDoc, async (snapshot) => {
       const data = snapshot.data();
-      if (!peerConnection.currentRemoteDescription && data?.answer) {
-        const answerDescription = new RTCSessionDescription(data.answer);
-        peerConnection.setRemoteDescription(answerDescription);
-        setCallStatus('active');
+      if (peerConnection.signalingState === 'have-local-offer' && data?.answer) {
+        try {
+          const answerDescription = new RTCSessionDescription(data.answer);
+          await peerConnection.setRemoteDescription(answerDescription);
+          setCallStatus('active');
+          
+          // Process any queued candidates
+          candidateQueue.forEach(candidate => {
+            peerConnection.addIceCandidate(candidate).catch(e => console.error('Error adding queued ICE candidate', e));
+          });
+          candidateQueue.length = 0; // Clear queue
+        } catch (err) {
+          console.error('Error setting remote description:', err);
+        }
       }
       if (data?.status === 'ended' || data?.status === 'rejected') {
         cleanupCall();
       }
-    });
-
-    // Listen for callee ICE candidates
-    onSnapshot(calleeCandidates, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === 'added') {
-          const data = change.doc.data();
-          peerConnection.addIceCandidate(new RTCIceCandidate(data));
-        }
-      });
     });
   };
 
@@ -199,7 +215,7 @@ export function useAudioCall(userId) {
       snapshot.docChanges().forEach((change) => {
         if (change.type === 'added') {
           const data = change.doc.data();
-          peerConnection.addIceCandidate(new RTCIceCandidate(data));
+          peerConnection.addIceCandidate(new RTCIceCandidate(data)).catch(e => console.error('Error adding ICE candidate', e));
         }
       });
     });
