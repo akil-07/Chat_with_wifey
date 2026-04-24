@@ -22,8 +22,8 @@ export default function ConversationItem({ conversation, active, onClick, onDele
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
-        display: 'flex', alignItems: 'center', gap: '0.625rem',
-        padding: '0.625rem 1rem',
+        display: 'flex', alignItems: 'center', gap: '0.85rem',
+        padding: '0.75rem 1rem',
         cursor: 'pointer',
         background: active ? 'color-mix(in srgb, var(--sidebar-primary) 12%, transparent)' : 'transparent',
         borderRight: active ? '3px solid var(--sidebar-primary)' : '3px solid transparent',
@@ -33,25 +33,25 @@ export default function ConversationItem({ conversation, active, onClick, onDele
     >
       <UserAvatar
         name={displayName}
-        size={40}
+        size={44}
         online={!conversation.is_group && otherMemberId ? isOnline?.(otherMemberId) : false}
       />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.15rem' }}>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.2rem' }}>
           <span style={{
-            fontWeight: unread > 0 ? 700 : 600, fontSize: '0.865rem',
+            fontWeight: unread > 0 ? 700 : 600, fontSize: '0.9rem',
             color: active ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {displayName}
           </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexShrink: 0, marginLeft: '0.375rem' }}>
-            {!hover && lastMsg && (
-              <span style={{ fontSize: '0.65rem', color: 'var(--muted-foreground)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0, marginLeft: '0.5rem' }}>
+            {(!hover || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)) && lastMsg && (
+              <span style={{ fontSize: '0.7rem', color: 'var(--muted-foreground)', whiteSpace: 'nowrap' }}>
                 {formatTime(lastMsg.created_at)}
               </span>
             )}
-            {hover && (
+            {hover && !/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent) && (
               <button
                 className="btn-ghost"
                 onClick={(e) => { e.stopPropagation(); onDelete(); }}

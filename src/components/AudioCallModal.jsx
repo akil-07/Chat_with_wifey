@@ -193,7 +193,7 @@ export default function AudioCallModal() {
             handleSpeakerToggle();
             // Also attempt to kickstart play on any button interaction
             if (remoteAudioRef.current && remoteAudioRef.current.paused) {
-              remoteAudioRef.current.play().catch(() => {});
+              remoteAudioRef.current.play().catch(() => { });
               setPlayError(false);
             }
           }}

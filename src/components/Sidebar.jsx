@@ -45,9 +45,10 @@ export default function Sidebar({ conversations, loadingChats, activeId, onSelec
         transition: 'width 0.3s ease',
       }}>
         {/* Header */}
-        <div className="mobile-safe-top" style={{ padding: '0.75rem 1rem 0.75rem', borderBottom: '1px solid var(--sidebar-border)' }}>
+        <div className="mobile-safe-top" style={{ padding: '1rem 1rem 0.75rem', borderBottom: '1px solid var(--sidebar-border)' }}>
+          <div style={{ height: 'env(safe-area-inset-top)', width: '100%' }} />
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.875rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <img
                 src={logo}
