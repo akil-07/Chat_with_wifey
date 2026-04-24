@@ -29,23 +29,6 @@ export default function AuthPage() {
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
-    // Handle Redirect Result (for mobile browsers)
-    if (!Capacitor.isNativePlatform()) {
-      getRedirectResult(auth)
-        .then(async (res) => {
-          if (res) {
-            setLoading(true)
-            await createProfileIfNotExists(res)
-            setLoading(false)
-          }
-        })
-        .catch((err) => {
-          console.error('Redirect Result Error:', err)
-          setError(err.message)
-          setLoading(false)
-        })
-    }
-
     // Initialize Capacitor Google Auth
     if (Capacitor.isNativePlatform()) {
        GoogleAuth.initialize({
@@ -63,27 +46,21 @@ export default function AuthPage() {
   }, [])
 
   async function handleGoogleLogin() {
-    setError(''); setSuccess(''); setLoading(true)
     try {
       if (Capacitor.isNativePlatform()) {
+        setError(''); setSuccess(''); setLoading(true);
         const googleUser = await GoogleAuth.signIn()
         const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken)
         const res = await signInWithCredential(auth, credential)
         await createProfileIfNotExists(res)
         setLoading(false)
       } else {
-        // Detect mobile browser
-        const isMobileBrowser = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        if (isMobileBrowser) {
-          // Use Redirect for mobile browsers to avoid popup blockers
-          await signInWithRedirect(auth, googleProvider)
-        } else {
-          // Use Popup for desktop
-          const res = await signInWithPopup(auth, googleProvider)
-          await createProfileIfNotExists(res)
-          setLoading(false)
-        }
+        // Call popup IMMEDIATELY to prevent iOS Safari from blocking it.
+        // Do not put state updates (like setLoading) before this line.
+        const res = await signInWithPopup(auth, googleProvider)
+        setError(''); setSuccess(''); setLoading(true);
+        await createProfileIfNotExists(res)
+        setLoading(false)
       }
     } catch (err) {
       setError(err.message)
