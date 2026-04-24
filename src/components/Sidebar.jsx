@@ -36,7 +36,7 @@ export default function Sidebar({ conversations, loadingChats, activeId, onSelec
       <aside style={{
         width: isMobile ? '100%' : '300px',
         minWidth: isMobile ? '100%' : '300px',
-        height: '100vh',
+        height: '100%',
         background: 'var(--sidebar)',
         borderRight: isMobile ? 'none' : '1px solid var(--sidebar-border)',
         display: 'flex',
@@ -124,7 +124,7 @@ export default function Sidebar({ conversations, loadingChats, activeId, onSelec
 
         {/* Footer / Profile */}
         <div style={{
-          padding: '0.75rem 1rem',
+          padding: '0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px))',
           borderTop: '1px solid var(--sidebar-border)',
           display: 'flex',
           alignItems: 'center',

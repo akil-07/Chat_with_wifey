@@ -150,7 +150,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', background: 'var(--background)', position: 'relative' }}>
+    <div style={{ display: 'flex', height: '100dvh', width: '100vw', overflow: 'hidden', background: 'var(--background)', position: 'relative' }}>
       <AnimatePresence initial={false}>
         {(!isMobile || !activeConversation) && (
           <motion.div
